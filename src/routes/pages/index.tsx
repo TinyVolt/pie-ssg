@@ -1,11 +1,11 @@
 import { For } from 'solid-js';
-import { pages } from '~/lib/markdown/pages';
+import { slugs } from '~/lib/markdown/pages';
 
 export default function Pages() {
   return (
     <main>
       <ul>
-        <For each={[...pages.keys()]}>
+        <For each={slugs}>
           {slug => (
             <li>
               <a href={`/pages/${slug}`}>{slug}</a>

@@ -42,8 +42,12 @@ const ready = (async () => {
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.registerJsModule('bridge', { call });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
+  postMessage({ type: 'loaded' });
   return py;
 })();
+
+// Scope id -> the Python globals its runs share. One scope per page.
+const scopes = new Map<string, any>();
 
 self.onmessage = async ({ data }) => {
   if (data.type === 'reply') {
@@ -55,15 +59,20 @@ self.onmessage = async ({ data }) => {
   if (data.type === 'run') {
     try {
       const py = await ready;
-      const globals = py.globals.get('dict')();
-      try {
-        await py.runPythonAsync(data.code, { globals });   // Async entry is required for run_sync
-      } finally {
-        globals.destroy();
+      let globals = scopes.get(data.scope);
+      if (!globals) {
+        globals = py.globals.get('dict')();
+        py.runPython('import pie', { globals });
+        scopes.set(data.scope, globals);
       }
+      await py.runPythonAsync(data.code, { globals });   // Async entry is required for run_sync
       postMessage({ type: 'done' });
     } catch (e) {
       postMessage({ type: 'done', error: e instanceof Error ? e.message : String(e) });
     }
+  }
+  if (data.type === 'dispose') {
+    scopes.get(data.scope)?.destroy();
+    scopes.delete(data.scope);
   }
 };

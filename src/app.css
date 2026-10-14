@@ -16,63 +16,39 @@ main {
   margin: 1rem;
 }
 
-/* A canvas page fills the screen below the nav links; canvas and text scroll on their own.
-   The 16px is body's default 8px margin, top and bottom. */
-#app:has(.canvas-page) {
-  display: grid;
-  grid-template-columns: repeat(3, max-content) 1fr;
-  grid-template-rows: auto minmax(0, 1fr);
-  height: calc(100dvh - 16px);
-}
-
-.canvas-page {
-  grid-column: 1 / -1;
+.split-pane {
   display: flex;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
 }
 
-.canvas-page--left {
+.split-pane--left {
   flex-direction: row;
 }
 
-.canvas-page--right {
+.split-pane--right {
   flex-direction: row-reverse;
 }
 
-.canvas-page--top {
+.split-pane--top {
   flex-direction: column;
 }
 
-.canvas-page--bottom {
+.split-pane--bottom {
   flex-direction: column-reverse;
 }
 
-.canvas-page-canvas {
-  flex: 1;
+/* Each pane scrolls on its own. */
+.split-pane-pane {
   position: relative;
   min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
 }
 
-.canvas-page-canvas svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.canvas-page-text {
-  margin: 0;
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-/* Draggable divider: a thin bar along whichever axis the page uses. */
-.canvas-page-resizer {
+/* Draggable divider: a thin bar along whichever axis the split uses. */
+.split-pane-divider {
   position: relative;
   flex: 0 0 6px;
   align-self: stretch;
@@ -83,16 +59,16 @@ main {
   touch-action: none;
 }
 
-.canvas-page-resizer:hover,
-.canvas-page-resizer:active {
+.split-pane-divider:hover,
+.split-pane-divider:active {
   background: #999;
 }
 
-.canvas-page-resizer--horizontal {
+.split-pane-divider--horizontal {
   cursor: row-resize;
 }
 
-.canvas-page-resizer-buttons {
+.split-pane-buttons {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -101,11 +77,11 @@ main {
   gap: 0.3rem;
 }
 
-.canvas-page-resizer--horizontal .canvas-page-resizer-buttons {
+.split-pane-divider--horizontal .split-pane-buttons {
   flex-direction: row;
 }
 
-.canvas-page-resizer-button {
+.split-pane-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -119,7 +95,89 @@ main {
   cursor: pointer;
 }
 
-.canvas-page-resizer-button:hover {
+.split-pane-button:hover {
   color: #000;
   border-color: #999;
+}
+
+/* A canvas page fills the screen below the nav links.
+   The 16px is body's default 8px margin, top and bottom. */
+#app:has(.canvas-page) {
+  display: grid;
+  grid-template-columns: repeat(3, max-content) 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100dvh - 16px);
+}
+
+.canvas-page {
+  grid-column: 1 / -1;
+}
+
+.canvas-page-canvas {
+  height: 100%;
+}
+
+.canvas-page-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-page-text {
+  margin: 0;
+}
+
+/* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
+pre:has(> code.language-python-editor) {
+  visibility: hidden;
+}
+
+.python-editor {
+  margin: 1rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.python-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-top: 1px solid #ddd;
+}
+
+.python-editor-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.python-editor-button:hover {
+  border-color: #999;
+}
+
+.python-editor-status {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.python-editor-output {
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 20rem;
+  overflow: auto;
+  border-top: 1px solid #ddd;
+  white-space: pre-wrap;
+}
+
+.python-editor-error {
+  color: #c00;
+}
+
+.python-editor-note {
+  color: #666;
 }
