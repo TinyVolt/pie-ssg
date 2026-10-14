@@ -1,0 +1,17 @@
+- Markdown only
+    - for an article, slideshow or any other format.
+- Python for programmatic tasks
+    - primarily as code fences in the markdown 
+- Access to Python editor
+    - should run locally on the reader's browser
+- Access to Python scientific computing toolkit 
+    - `numpy`, `scipy`, `matplotlib`
+- Reactivity
+    - updating a variable should update all downstream values automatically, something that was missing in jupyter notebooks and which marimo solved
+- Autodiff
+    - should be available as a native feature
+- Tensors and broadcasting
+- Extensible
+- A canvas for visualization
+    - and a declarative API to use Python to draw objects directly
+
