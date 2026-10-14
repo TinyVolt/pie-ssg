@@ -1,5 +1,5 @@
 import { For } from 'solid-js';
-import { pages } from '~/lib/pages';
+import { pages } from '~/lib/markdown/pages';
 
 export default function Pages() {
   return (

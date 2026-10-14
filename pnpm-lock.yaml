@@ -180,7 +180,7 @@ importers:
         version: 1.0.0(solid-js@1.9.14)
       '@solidjs/start':
         specifier: ^2.0.0
-        version: 2.0.0(@solidjs/router@1.0.0(solid-js@1.9.14))(crossws@0.4.10(srvx@0.11.22))(vite@8.1.4)
+        version: 2.0.0(@solidjs/router@1.0.0(solid-js@1.9.14))(crossws@0.4.10(srvx@0.11.22))(vite@8.1.4(@types/node@24.19.2))
       codemirror:
         specifier: ^6.0.2
         version: 6.0.2
@@ -192,14 +192,17 @@ importers:
         version: 18.1.1
       nitro:
         specifier: ^3.0.260610-beta
-        version: 3.0.260610-beta(vite@8.1.4)
+        version: 3.0.260610-beta(vite@8.1.4(@types/node@24.19.2))
       solid-js:
         specifier: ^1.9.14
         version: 1.9.14
       vite:
         specifier: ^8.0.0
-        version: 8.1.4
+        version: 8.1.4(@types/node@24.19.2)
     devDependencies:
+      '@types/node':
+        specifier: ^24.19.2
+        version: 24.19.2
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
@@ -768,6 +771,9 @@ packages:
 
   '@types/micromatch@4.0.10':
     resolution: {integrity: sha512-5jOhFDElqr4DKTrTEbnW8DZ4Hz5LRUEmyrGpCMrD/NphYv3nUnaF08xmSLx1rGGnyEs/kFnhiw6dCgcDqMr5PQ==}
+
+  '@types/node@24.19.2':
+    resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
 
   '@types/unist@3.0.3':
     resolution: {integrity: sha512-ko/gIFJRv177XgZsZcBwnqJN5x/Gien8qNOn0D5bQU/zAzVf9Zt3BlcUiLqhV9y4ARk0GbT3tnUiPNgnTXzc/Q==}
@@ -1488,6 +1494,9 @@ packages:
     engines: {node: '>=16.20.0'}
     hasBin: true
 
+  undici-types@7.24.6:
+    resolution: {integrity: sha512-WRNW+sJgj5OBN4/0JpHFqtqzhpbnV0GuB+OozA9gCL7a993SmU+1JBZCzLNxYsbMfIeDL+lTsphD5jN5N+n0zg==}
+
   unenv@2.0.0-rc.24:
     resolution: {integrity: sha512-i7qRCmY42zmCwnYlh9H2SvLEypEFGye5iRmEMKjcGi7zk9UquigRjFtTLz0TYqr0ZGLZhaMHl/foy1bZR+Cwlw==}
 
@@ -2142,7 +2151,7 @@ snapshots:
     dependencies:
       solid-js: 1.9.14
 
-  '@solidjs/start@2.0.0(@solidjs/router@1.0.0(solid-js@1.9.14))(crossws@0.4.10(srvx@0.11.22))(vite@8.1.4)':
+  '@solidjs/start@2.0.0(@solidjs/router@1.0.0(solid-js@1.9.14))(crossws@0.4.10(srvx@0.11.22))(vite@8.1.4(@types/node@24.19.2))':
     dependencies:
       '@babel/core': 7.29.7
       '@babel/traverse': 7.29.7
@@ -2168,8 +2177,8 @@ snapshots:
       source-map-js: 1.2.1
       srvx: 0.12.4
       terracotta: 1.1.1(solid-js@1.9.14)
-      vite: 8.1.4
-      vite-plugin-solid: 2.11.14(solid-js@1.9.14)(vite@8.1.4)
+      vite: 8.1.4(@types/node@24.19.2)
+      vite-plugin-solid: 2.11.14(solid-js@1.9.14)(vite@8.1.4(@types/node@24.19.2))
     optionalDependencies:
       '@solidjs/router': 1.0.0(solid-js@1.9.14)
     transitivePeerDependencies:
@@ -2216,6 +2225,10 @@ snapshots:
   '@types/micromatch@4.0.10':
     dependencies:
       '@types/braces': 3.0.5
+
+  '@types/node@24.19.2':
+    dependencies:
+      undici-types: 7.24.6
 
   '@types/unist@3.0.3': {}
 
@@ -2574,7 +2587,7 @@ snapshots:
 
   nf3@0.3.22: {}
 
-  nitro@3.0.260610-beta(vite@8.1.4):
+  nitro@3.0.260610-beta(vite@8.1.4(@types/node@24.19.2)):
     dependencies:
       consola: 3.4.2
       crossws: 0.4.10(srvx@0.11.22)
@@ -2591,7 +2604,7 @@ snapshots:
       unenv: 2.0.0-rc.24
       unstorage: 2.0.0-alpha.7(db0@0.3.4)(ofetch@2.0.0-alpha.3)
     optionalDependencies:
-      vite: 8.1.4
+      vite: 8.1.4(@types/node@24.19.2)
     transitivePeerDependencies:
       - '@azure/app-configuration'
       - '@azure/cosmos'
@@ -2858,6 +2871,8 @@ snapshots:
       '@typescript/typescript-win32-arm64': 7.0.2
       '@typescript/typescript-win32-x64': 7.0.2
 
+  undici-types@7.24.6: {}
+
   unenv@2.0.0-rc.24:
     dependencies:
       pathe: 2.0.3
@@ -2906,7 +2921,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-plugin-solid@2.11.14(solid-js@1.9.14)(vite@8.1.4):
+  vite-plugin-solid@2.11.14(solid-js@1.9.14)(vite@8.1.4(@types/node@24.19.2)):
     dependencies:
       '@babel/core': 7.29.7
       '@types/babel__core': 7.20.5
@@ -2914,12 +2929,12 @@ snapshots:
       merge-anything: 5.1.7
       solid-js: 1.9.14
       solid-refresh: 0.6.3(solid-js@1.9.14)
-      vite: 8.1.4
-      vitefu: 1.1.2(vite@8.1.4)
+      vite: 8.1.4(@types/node@24.19.2)
+      vitefu: 1.1.2(vite@8.1.4(@types/node@24.19.2))
     transitivePeerDependencies:
       - supports-color
 
-  vite@8.1.4:
+  vite@8.1.4(@types/node@24.19.2):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.5
@@ -2927,11 +2942,12 @@ snapshots:
       rolldown: 1.1.5
       tinyglobby: 0.2.17
     optionalDependencies:
+      '@types/node': 24.19.2
       fsevents: 2.3.3
 
-  vitefu@1.1.2(vite@8.1.4):
+  vitefu@1.1.2(vite@8.1.4(@types/node@24.19.2)):
     optionalDependencies:
-      vite: 8.1.4
+      vite: 8.1.4(@types/node@24.19.2)
 
   w3c-keyname@2.2.8: {}
 

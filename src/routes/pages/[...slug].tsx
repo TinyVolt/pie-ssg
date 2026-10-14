@@ -2,16 +2,21 @@ import { useParams } from '@solidjs/router';
 import { HttpStatusCode } from '@solidjs/start';
 import { Show } from 'solid-js';
 import 'katex/dist/katex.min.css';
-import { renderMarkdown } from '~/lib/markdown';
-import { pages } from '~/lib/pages';
+import { CanvasPage } from '~/lib/markdown/components/CanvasPage';
+import { pages } from '~/lib/markdown/pages';
+import { renderMarkdown } from '~/lib/markdown/render';
 
 export default function Page() {
   const params = useParams();
-  const markdown = () => pages.get(params.slug ?? '');
+  const page = () => pages.get(params.slug ?? '');
+  const canvasSide = () => {
+    const canvas = page()?.frontmatter.canvas;
+    return canvas === 'none' ? undefined : canvas;
+  };
 
   return (
     <Show
-      when={markdown() !== undefined}
+      when={page()}
       fallback={
         <main>
           <HttpStatusCode code={404} />
@@ -19,7 +24,11 @@ export default function Page() {
         </main>
       }
     >
-      <main innerHTML={renderMarkdown(markdown()!)} />
+      {(page) => (
+        <Show when={canvasSide()} keyed fallback={<main innerHTML={renderMarkdown(page().body)} />}>
+          {(side) => <CanvasPage side={side} html={renderMarkdown(page().body)} />}
+        </Show>
+      )}
     </Show>
   );
 }

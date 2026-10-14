@@ -15,3 +15,111 @@ main {
   padding: 1rem;
   margin: 1rem;
 }
+
+/* A canvas page fills the screen below the nav links; canvas and text scroll on their own.
+   The 16px is body's default 8px margin, top and bottom. */
+#app:has(.canvas-page) {
+  display: grid;
+  grid-template-columns: repeat(3, max-content) 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  height: calc(100dvh - 16px);
+}
+
+.canvas-page {
+  grid-column: 1 / -1;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.canvas-page--left {
+  flex-direction: row;
+}
+
+.canvas-page--right {
+  flex-direction: row-reverse;
+}
+
+.canvas-page--top {
+  flex-direction: column;
+}
+
+.canvas-page--bottom {
+  flex-direction: column-reverse;
+}
+
+.canvas-page-canvas {
+  flex: 1;
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.canvas-page-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-page-text {
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Draggable divider: a thin bar along whichever axis the page uses. */
+.canvas-page-resizer {
+  position: relative;
+  flex: 0 0 6px;
+  align-self: stretch;
+  background: #ddd;
+  cursor: col-resize;
+  z-index: 5;
+  transition: background 0.15s ease;
+  touch-action: none;
+}
+
+.canvas-page-resizer:hover,
+.canvas-page-resizer:active {
+  background: #999;
+}
+
+.canvas-page-resizer--horizontal {
+  cursor: row-resize;
+}
+
+.canvas-page-resizer-buttons {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.canvas-page-resizer--horizontal .canvas-page-resizer-buttons {
+  flex-direction: row;
+}
+
+.canvas-page-resizer-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  color: #666;
+  cursor: pointer;
+}
+
+.canvas-page-resizer-button:hover {
+  color: #000;
+  border-color: #999;
+}
