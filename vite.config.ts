@@ -3,9 +3,10 @@ import { nitro } from "nitro/vite";
 
 import { solidStart } from "@solidjs/start/config";
 import { markdownPages } from "./src/lib/markdown/vitePlugin";
+import { checkFunctions } from "./src/lib/nodes/functions/vitePlugin";
 
 export default defineConfig({
-  plugins: [markdownPages(), solidStart(),
+  plugins: [markdownPages(), checkFunctions(), solidStart(),
     nitro({ prerender: { crawlLinks: true, routes: ['/', '/pages'] } })
   ],
   optimizeDeps: {
