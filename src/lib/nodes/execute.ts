@@ -2,7 +2,7 @@ import { createMemo, createRoot } from 'solid-js';
 import { getFunction } from './functions/registry';
 import { NodeReconciler, ParameterDefinition } from './functions/Node2NodeFunc';
 import { NodeStore } from './state/NodeStore';
-import { AnyNode, ScalarNode, TextNode } from './state/Node';
+import { AnyNode, NodeType, ScalarNode, TextNode } from './state/Node';
 import { scalar } from './jax';
 
 /** One argument of a Python call: a number, a string, or a handle to an existing node. */
@@ -56,9 +56,10 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   // Check every type first, so a bad call leaves no literal nodes behind.
   args.forEach((arg, i) => {
     const param = func.parameters[i];
+    const types = Array.isArray(param.type) ? param.type : [param.type];
     const got = argType(arg, store);
-    if (got !== param.type) {
-      throw new Error(`${keyword}: expected ${param.type} but got ${got} for argument '${param.name}'`);
+    if (!types.includes(got as NodeType)) {
+      throw new Error(`${keyword}: expected ${types.join(' or ')} but got ${got} for argument '${param.name}'`);
     }
   });
 
@@ -78,7 +79,8 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
 
   const inputNodeIds = args.map(arg => resolveArg(arg, store));
 
-  const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(func.outputType));
+  const outputType = func.resolveOutputType?.(inputNodeIds.map(id => store.getNodeValue(id)!)) ?? func.outputType;
+  const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(outputType));
   new NodeReconciler().evaluate(func, inputNodeIds, store, id);
 
   return { id, type: store.getNodeValue(id)?.type ?? func.outputType };

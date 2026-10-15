@@ -107,6 +107,29 @@ export const Line: Node2NodeFunc = {
 };
 
 /**
+ * Compute the distance between two points.
+ * @param point1 - First point
+ * @param point2 - Second point
+ * @returns Scalar node
+ * @auxiliaryNodes None
+ */
+export const Distance: Node2NodeFunc = {
+  keyword: 'distance', outputType: 'Scalar',
+  parameters: [{ name: 'point1', type: 'Point' }, { name: 'point2', type: 'Point' }],
+  compute(inputs) {
+    const inner = (ins: AnyNode[]) => {
+      const p1 = ins[0] as PointNode;
+      const p2 = ins[1] as PointNode;
+      const dx = sub(ref(p2.x), ref(p1.x));
+      const dy = sub(ref(p2.y), ref(p1.y));
+      const value = sqrt(add(mul(ref(dx), ref(dx)), mul(ref(dy), ref(dy))));
+      return { main: { type: 'Scalar', value } };
+    };
+    return inner(inputs);
+  },
+};
+
+/**
  * Create a circle with a center point and radius.
  * @param center - Center point of the circle
  * @param radius - Radius of the circle

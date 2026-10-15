@@ -1,4 +1,4 @@
-import { PointNode, LineNode, TriangleNode, CircleNode, EllipseNode, ArcNode, BezierQuadraticNode, BezierCubicNode, AnyNode, NodeType, NodeTypeMap } from "../state/Node";
+import { PointNode, LineNode, TriangleNode, CircleNode, EllipseNode, ArcNode, BezierQuadraticNode, BezierCubicNode, PointGradNode, AnyNode, NodeType, NodeTypeMap } from "../state/Node";
 import { num } from "../jax";
 import { Accessor, JSXElement, Show } from "solid-js";
 
@@ -7,6 +7,7 @@ import { Accessor, JSXElement, Show } from "solid-js";
 const COLOR = 'currentColor';
 const STROKE_WIDTH = 2;
 const POINT_RADIUS = 4;
+const ARROW_HEAD = 10;
 
 // Each render function runs once per element. It reads the node accessor inside
 // the attributes, so a node change updates those attributes in place.
@@ -126,6 +127,39 @@ const renderBezierCubic = (node: Accessor<AnyNode>) => {
     );
 }
 
+// Draws (dx, dy) in grid units, starting at the point. No arrow when it is zero or NaN.
+const renderPointGrad = (node: Accessor<AnyNode>, unit: Accessor<number>) => {
+    const grad = node as Accessor<PointGradNode>;
+
+    const arrow = () => {
+        const g = grad();
+        const x = num(g.point.x), y = num(g.point.y), dx = num(g.dx), dy = num(g.dy);
+        const length = Math.hypot(dx, dy);
+        if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(length) || length === 0) return null;
+        const ux = dx / length, uy = dy / length;
+        // The head shrinks to fit an arrow shorter than it.
+        const head = Math.min(ARROW_HEAD / unit(), length);
+        const tipX = x + dx, tipY = y + dy;
+        const baseX = tipX - head * ux, baseY = tipY - head * uy;
+        const half = head / 2;
+        return {
+            x, y, baseX, baseY,
+            head: `${tipX},${tipY} ${baseX - half * uy},${baseY + half * ux} ${baseX + half * uy},${baseY - half * ux}`,
+        };
+    };
+
+    return (
+        <Show when={arrow()}>
+            {(a) => (
+                <>
+                    <line x1={a().x} y1={a().y} x2={a().baseX} y2={a().baseY} stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+                    <polygon points={a().head} fill={COLOR} />
+                </>
+            )}
+        </Show>
+    );
+}
+
 const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>, unit: Accessor<number>) => JSXElement | null>> = {
     Point: renderPoint,
     Line: renderLine,
@@ -135,6 +169,7 @@ const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>, uni
     Arc: renderArc,
     BezierQuadratic: renderBezierQuadratic,
     BezierCubic: renderBezierCubic,
+    PointGrad: renderPointGrad,
 };
 
 export const renderNode = (type: NodeType, node: Accessor<AnyNode>, unit: Accessor<number>): JSXElement | null => {

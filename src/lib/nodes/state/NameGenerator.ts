@@ -11,6 +11,7 @@ export const NAMING_PREFIXES: Record<NodeType, string> = {
   BezierQuadratic: 'bq',
   BezierCubic: 'bc',
   Arc: 'arc',
+  PointGrad: 'pointgrad',
   Dummy: '',
 };
 
