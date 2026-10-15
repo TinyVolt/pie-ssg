@@ -2,6 +2,8 @@
     - for an article, slideshow or any other format.
     - Design choices: use `marked` and `katex`.
 - Python for programmatic tasks
+    - Design choice: typescript functions implemented in `src/lib/nodes/functions` can be called from Python directly using `pie.<function_keyword>`. This allows the author to create an API for readers to use and interact with. 
+    - Make it easier to extend function registry.
 - Access to Python editor
     - should run locally on the reader's browser
     - primarily as code fences in the markdown 
