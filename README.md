@@ -3,7 +3,7 @@
 [![npm](https://img.shields.io/npm/v/@tinyvolt/create-pie)](https://www.npmjs.com/package/@tinyvolt/create-pie)
 [![license](https://img.shields.io/github/license/TinyVolt/pie-ssg)](LICENSE)
 
-A markdown based static-site generator for math and science
+A Markdown-based SSG for interactive science explainers
 
 See the [roadmap](ROADMAP.md) for planned features.
 
