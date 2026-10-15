@@ -5,7 +5,8 @@ import { NodeStore } from '../state/NodeStore';
 
 export interface ParameterDefinition {
   name: string;
-  type: NodeType;
+  /** A list means any one of these types is accepted. */
+  type: NodeType | NodeType[];
 }
 
 export type BlueprintNode = any;
@@ -18,6 +19,8 @@ const TRANSIENT_ERROR_GRACE_MS = 500;
 export interface Node2NodeFunc {
   keyword: string;
   outputType: NodeType;
+  /** For a function whose output type depends on its inputs. Used to name the output. */
+  resolveOutputType?: (inputs: AnyNode[]) => NodeType;
   parameters: ParameterDefinition[];
   compute: (inputs: AnyNode[]) => Record<string, BlueprintNode>;
 }
@@ -125,11 +128,16 @@ export class NodeReconciler {
       let lastErrorMessage = '';
       onCleanup(() => { if (graceTimer !== undefined) clearTimeout(graceTimer); });
 
+      // The inputs the current blueprint was computed from. Set together with the
+      // blueprint, so a kept previous blueprint keeps its own inputs.
+      let blueprintInputs: AnyNode[] = [];
+
       const blueprintMemo = createMemo<Record<string, BlueprintNode> | null>((prev) => {
         const inputs = inputNodeIds.map(id => store.getNodeValue(id));
         if (inputs.some(node => !node || node.type === 'Dummy')) return null;
         try {
           const blueprint = func.compute(inputs as AnyNode[]);
+          blueprintInputs = inputs as AnyNode[];
           if (graceTimer !== undefined) {
             clearTimeout(graceTimer);
             graceTimer = undefined;
@@ -150,15 +158,15 @@ export class NodeReconciler {
       }, null);
       firstRunDone = true;
 
-      this.reconcile(blueprintMemo, localToGlobal, func, inputNodeIds, assignedId, store, disposeRoot);
+      this.reconcile(blueprintMemo, () => blueprintInputs, localToGlobal, func, assignedId, store, disposeRoot);
     }) // outer `createRoot` ends here
   }
 
   private reconcile(
     blueprintAccessor: () => Record<string, BlueprintNode> | null,
+    inputsAccessor: () => AnyNode[],
     localToGlobal: Map<string, LocalMeta>,
     func: Node2NodeFunc,
-    inputNodeIds: string[],
     assignedId: string | undefined,
     store: NodeStore,
     disposeRoot: () => void
@@ -209,7 +217,7 @@ export class NodeReconciler {
                   id: globalId,
                   __graph_deps: {
                     funcKeyword: func.keyword,
-                    inputNodeIds: inputNodeIds,
+                    inputNodes: inputsAccessor(),
                     blueprintKey: localKey,
                     ...(localKey !== 'main' ? { parentId: localToGlobal.get('main')?.globalId } : {})
                   }

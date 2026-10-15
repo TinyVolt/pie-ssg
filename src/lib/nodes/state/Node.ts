@@ -5,7 +5,7 @@ export interface Node {
   type: string;
   __graph_deps?: {
     funcKeyword: string;
-    inputNodeIds: string[];
+    inputNodes: AnyNode[];
     blueprintKey?: string;
     // ID of the 'main' output node, set on a function's auxiliary nodes.
     parentId?: string;
@@ -76,6 +76,15 @@ export interface ArcNode extends Node {
   endAngle: ScalarNode;
 }
 
+/** d target / d point, drawn as an arrow (dx, dy) starting at `point`. */
+export interface PointGradNode extends Node {
+  type: 'PointGrad';
+  point: PointNode;
+  target: ScalarNode;
+  dx: Dtype;
+  dy: Dtype;
+}
+
 export interface DummyNode extends Node {
   type: 'Dummy';
 }
@@ -91,6 +100,7 @@ export interface NodeTypeMap {
   BezierQuadratic: BezierQuadraticNode;
   BezierCubic: BezierCubicNode;
   Arc: ArcNode;
+  PointGrad: PointGradNode;
   Dummy: DummyNode;
 }
 
