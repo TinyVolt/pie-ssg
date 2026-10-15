@@ -1,13 +1,20 @@
 - Markdown only
     - for an article, slideshow or any other format.
+    - Design choices: use `marked` and `katex`.
 - Python for programmatic tasks
-    - primarily as code fences in the markdown 
 - Access to Python editor
     - should run locally on the reader's browser
+    - primarily as code fences in the markdown 
+    - Design choices:
+        - Using code fence \`\`\`python-editor ... \`\`\` adds a Python editor to the document. 
+        - Powered by `pyodide`. Async behavior is hidden using sync commands using `run_sync`.
+        - Pyodide is downloaded from a CDN and runs in a web worker in the reader's browser. Python has no direct access to the DOM. All communication happens using the message API. 
 - Access to Python scientific computing toolkit 
     - `numpy`, `scipy`, `matplotlib`
 - Reactivity
     - updating a variable should update all downstream values automatically, something that was missing in jupyter notebooks and which marimo solved
+    - Design choices:
+        - use SolidJS store. It comes with reactivity baked in. 
 - Autodiff
     - should be available as a native feature
 - Tensors and broadcasting
