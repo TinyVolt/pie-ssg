@@ -2,20 +2,19 @@ import { PointNode, LineNode, TriangleNode, CircleNode, EllipseNode, ArcNode, Be
 import { num } from "../jax";
 import { Accessor, JSXElement, Show } from "solid-js";
 
-// Sizes are in canvas units; the canvas shows a fixed range and scales to fit.
+// Sizes are in pixels. Strokes use `non-scaling-stroke` so their width ignores zoom;
+// the point radius is divided by `unit` (pixels per grid unit) instead.
 const COLOR = 'currentColor';
-const STROKE_WIDTH = 0.04;
-const POINT_RADIUS = 0.08;
+const STROKE_WIDTH = 2;
+const POINT_RADIUS = 4;
 
 // Each render function runs once per element. It reads the node accessor inside
 // the attributes, so a node change updates those attributes in place.
-const renderPoint = (node: Accessor<AnyNode>) => {
+const renderPoint = (node: Accessor<AnyNode>, unit: Accessor<number>) => {
     const point = node as Accessor<PointNode>
 
     return (
-        <g>
-            <circle cx={num(point().x)} cy={num(point().y)} r={POINT_RADIUS} fill={COLOR} />
-        </g>
+        <circle cx={num(point().x)} cy={num(point().y)} r={POINT_RADIUS / unit()} fill={COLOR} />
     );
 }
 
@@ -24,9 +23,7 @@ const renderLine = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={line().p1 && line().p2}>
-            <g>
-                <line x1={num(line().p1.x)} y1={num(line().p1.y)} x2={num(line().p2.x)} y2={num(line().p2.y)} stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <line x1={num(line().p1.x)} y1={num(line().p1.y)} x2={num(line().p2.x)} y2={num(line().p2.y)} stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -41,9 +38,7 @@ const renderTriangle = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={triangle().vertices[0] && triangle().vertices[1] && triangle().vertices[2]}>
-            <g>
-                <polygon points={pointsStr()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <polygon points={pointsStr()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -53,9 +48,7 @@ const renderCircle = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={circle().center}>
-            <g>
-                <circle cx={num(circle().center.x)} cy={num(circle().center.y)} r={num(circle().radius.value)} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <circle cx={num(circle().center.x)} cy={num(circle().center.y)} r={num(circle().radius.value)} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -71,9 +64,7 @@ const renderEllipse = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={ellipse().center}>
-            <g>
-                <ellipse cx={cx()} cy={cy()} rx={rx()} ry={ry()} transform={`rotate(${rotation()} ${cx()} ${cy()})`} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <ellipse cx={cx()} cy={cy()} rx={rx()} ry={ry()} transform={`rotate(${rotation()} ${cx()} ${cy()})`} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -100,9 +91,7 @@ const renderArc = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={arc().center}>
-            <g>
-                <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -117,9 +106,7 @@ const renderBezierQuadratic = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={bezier().p1 && bezier().control && bezier().p2}>
-            <g>
-                <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -134,14 +121,12 @@ const renderBezierCubic = (node: Accessor<AnyNode>) => {
 
     return (
         <Show when={bezier().p1 && bezier().control1 && bezier().control2 && bezier().p2}>
-            <g>
-                <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} />
-            </g>
+            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
 
-const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>) => JSXElement | null>> = {
+const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>, unit: Accessor<number>) => JSXElement | null>> = {
     Point: renderPoint,
     Line: renderLine,
     Triangle: renderTriangle,
@@ -152,7 +137,7 @@ const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>) => 
     BezierCubic: renderBezierCubic,
 };
 
-export const renderNode = (type: NodeType, node: Accessor<AnyNode>): JSXElement | null => {
+export const renderNode = (type: NodeType, node: Accessor<AnyNode>, unit: Accessor<number>): JSXElement | null => {
     const fn = renderMap[type];
-    return fn ? fn(node) : null;
+    return fn ? fn(node, unit) : null;
 };

@@ -2,15 +2,20 @@ import { For, createMemo, JSX } from 'solid-js';
 import { NodeStore, type NodeSignal } from '../state/NodeStore';
 import { renderNode } from '../render/renderLogic';
 import { CenteredGrid } from './CenteredGrid';
-
-/** The canvas always shows -VIEW_EXTENT..VIEW_EXTENT on both axes. */
-const VIEW_EXTENT = 10;
+import { useCanvasResize } from '../hooks/useCanvasResize';
 
 interface NodeCanvasProps {
   store: NodeStore;
 }
 
 export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
+  let svgContainerRef: HTMLDivElement | undefined;
+  useCanvasResize(() => svgContainerRef, props.store);
+
+  // Canvas size in grid units: the viewBox maps one unit to `unit` pixels.
+  const viewWidth = () => props.store.canvasBounds().width / props.store.unit();
+  const viewHeight = () => props.store.canvasBounds().height / props.store.unit();
+
   // One pass over the store, partitioned into the two draw layers.
   const layers = createMemo(() => {
     const geometry: NodeSignal[] = [];
@@ -31,19 +36,21 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     const type = createMemo(() => node()?.type);
     return (
       <g data-node-id={node()?.id}>
-        {type() && renderNode(type()!, node)}
+        {type() && renderNode(type()!, node, props.store.unit)}
       </g>
     );
   };
 
   return (
-    <svg viewBox={`${-VIEW_EXTENT} ${-VIEW_EXTENT} ${2 * VIEW_EXTENT} ${2 * VIEW_EXTENT}`}>
-      <CenteredGrid extent={VIEW_EXTENT}>
-        {/* Step 1: Draw non-`Point` nodes first */}
-        <For each={layers().geometry}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
-        {/* Step 2: Draw `Point` nodes above geometry */}
-        <For each={layers().points}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
-      </CenteredGrid>
-    </svg>
+    <div class="node-canvas" ref={svgContainerRef}>
+      <svg viewBox={`0 0 ${viewWidth()} ${viewHeight()}`}>
+        <CenteredGrid width={viewWidth()} height={viewHeight()} unit={props.store.unit()}>
+          {/* Step 1: Draw non-`Point` nodes first */}
+          <For each={layers().geometry}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
+          {/* Step 2: Draw `Point` nodes above geometry */}
+          <For each={layers().points}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
+        </CenteredGrid>
+      </svg>
+    </div>
   );
 }

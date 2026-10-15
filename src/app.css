@@ -241,6 +241,12 @@ main .katex-display {
   height: 100%;
 }
 
+/* NodeCanvas measures this box to size its grid. */
+.node-canvas {
+  width: 100%;
+  height: 100%;
+}
+
 .canvas-page-canvas svg {
   display: block;
   width: 100%;
