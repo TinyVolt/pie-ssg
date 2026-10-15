@@ -1,0 +1,315 @@
+body {
+  margin: 0;
+  color: #1a1a1a;
+  background: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+  text-underline-offset: 0.15em;
+}
+
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.site-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1.5rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.site-header-title {
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.site-header-nav {
+  display: flex;
+  gap: 1rem;
+}
+
+.site-header-nav a {
+  color: #555;
+  text-decoration: none;
+}
+
+.site-header-nav a:hover {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* Page text: a centered column about 70 characters wide. */
+main {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.125rem;
+}
+
+main h1,
+main h2,
+main h3,
+main h4 {
+  line-height: 1.25;
+}
+
+main h1 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+main h2 {
+  font-size: 1.4rem;
+  margin: 2rem 0 0.75rem;
+}
+
+main h3 {
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+main p,
+main ul,
+main ol,
+main blockquote,
+main table {
+  margin: 0 0 1rem;
+}
+
+main li + li {
+  margin-top: 0.25rem;
+}
+
+main hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid #ddd;
+}
+
+main blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid #ddd;
+  color: #555;
+}
+
+main img {
+  max-width: 100%;
+}
+
+main code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  background: #f4f4f4;
+  border-radius: 3px;
+}
+
+main > pre {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  background: #f4f4f4;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+main pre code {
+  padding: 0;
+  background: none;
+}
+
+main table {
+  border-collapse: collapse;
+}
+
+main th,
+main td {
+  padding: 0.3rem 0.75rem;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+main .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.split-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.split-pane--left {
+  flex-direction: row;
+}
+
+.split-pane--right {
+  flex-direction: row-reverse;
+}
+
+.split-pane--top {
+  flex-direction: column;
+}
+
+.split-pane--bottom {
+  flex-direction: column-reverse;
+}
+
+/* Each pane scrolls on its own. */
+.split-pane-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Draggable divider: a thin bar along whichever axis the split uses. */
+.split-pane-divider {
+  position: relative;
+  flex: 0 0 6px;
+  align-self: stretch;
+  background: #ddd;
+  cursor: col-resize;
+  z-index: 5;
+  transition: background 0.15s ease;
+  touch-action: none;
+}
+
+.split-pane-divider:hover,
+.split-pane-divider:active {
+  background: #999;
+}
+
+.split-pane-divider--horizontal {
+  cursor: row-resize;
+}
+
+.split-pane-buttons {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.split-pane-divider--horizontal .split-pane-buttons {
+  flex-direction: row;
+}
+
+.split-pane-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  color: #666;
+  cursor: pointer;
+}
+
+.split-pane-button:hover {
+  color: #000;
+  border-color: #999;
+}
+
+/* A canvas page fills the screen below the header. */
+#app:has(.canvas-page) {
+  height: 100dvh;
+}
+
+.canvas-page {
+  flex: 1 1 0;
+}
+
+.canvas-page-canvas {
+  height: 100%;
+}
+
+/* NodeCanvas measures this box to size its grid. */
+.node-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.canvas-page-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
+pre:has(> code.language-python-editor) {
+  visibility: hidden;
+}
+
+.python-editor {
+  margin: 1rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.python-editor .cm-editor {
+  font-size: 0.875rem;
+}
+
+.python-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-top: 1px solid #ddd;
+}
+
+.python-editor-button {
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.python-editor-button:hover {
+  border-color: #999;
+}
+
+.python-editor-status {
+  color: #666;
+  font-size: 0.875rem;
+}
+
+.python-editor-output {
+  margin: 0;
+  padding: 0.5rem;
+  max-height: 20rem;
+  overflow: auto;
+  border-top: 1px solid #ddd;
+  font-size: 0.875rem;
+  white-space: pre-wrap;
+}
+
+.python-editor-error {
+  color: #c00;
+}
+
+.python-editor-note {
+  color: #666;
+}
