@@ -11,8 +11,7 @@ export default defineConfig({
   ],
   optimizeDeps: {
     include: [
-      "@solidjs/start > source-map-js",
-      "@solidjs/start > error-stack-parser"
+      "@solidjs/start > @jridgewell/trace-mapping"
     ]
   }
 });
