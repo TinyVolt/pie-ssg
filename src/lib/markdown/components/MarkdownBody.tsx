@@ -1,7 +1,7 @@
 import { onCleanup, onMount } from 'solid-js';
 import { render } from 'solid-js/web';
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
-import { createPythonScope } from '~/lib/python/runner';
+import { PythonScope } from '~/lib/python/runner';
 
 const PYTHON_EDITOR_LANG = 'python-editor';
 
@@ -17,7 +17,7 @@ export function MarkdownBody(props: { html: string; store?: NodeStore; class?: s
     const blocks = ref.querySelectorAll<HTMLElement>(`pre > code.language-${PYTHON_EDITOR_LANG}`);
     if (blocks.length === 0) return;
 
-    const scope = createPythonScope(props.store);
+    const scope = new PythonScope(props.store);
     const disposers: (() => void)[] = [];
     onCleanup(() => {
       disposers.forEach((dispose) => dispose());

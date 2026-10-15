@@ -2,19 +2,25 @@ import { createSignal, onCleanup, onMount, Show } from 'solid-js';
 import { basicSetup, EditorView } from 'codemirror';
 import { keymap } from '@codemirror/view';
 import { python } from '@codemirror/lang-python';
-import type { PythonScope, RunEnd, RunStatus } from '~/lib/python/runner';
+import type { PythonScope, RunStatus } from '~/lib/python/runner';
 
 const STATUS_TEXT: Record<RunStatus | 'idle', string> = {
   idle: '',
   waiting: 'Waiting for another block…',
   loading: 'Loading Python…',
   running: 'Running…',
+  finished: '',
+  stopped: '',
+  killed: '',
 };
 
-function endNote(end: RunEnd): string {
-  if (end.kind === 'finished') return '';
-  return end.restarted ? 'Stopped. Python restarted, so variables from earlier blocks are gone.' : 'Stopped.';
-}
+const END_NOTE: Partial<Record<RunStatus, string>> = {
+  stopped: 'Stopped.',
+  killed: 'Stopped. Python restarted, so variables from earlier blocks are gone.',
+};
+
+const isActive = (status: RunStatus | 'idle') =>
+  status === 'waiting' || status === 'loading' || status === 'running';
 
 /** An editable block of Python. Run draws its `pie.*` calls on the scope's canvas. */
 export function PythonEditor(props: { code: string; scope: PythonScope }) {
@@ -26,23 +32,24 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
   const [output, setOutput] = createSignal('');
   const [error, setError] = createSignal('');
   const [note, setNote] = createSignal('');
-  const active = () => status() !== 'idle';
+  const active = () => isActive(status());
 
   const run = () => {
     if (active() || !view) return;
     setOutput('');
     setError('');
     setNote('');
-    stop = props.scope.run(view.state.doc.toString(), {
-      onStatus: setStatus,
-      onOutput: (text) => setOutput((prev) => prev + text),
-      onEnd: (end) => {
-        setStatus('idle');
+    stop = props.scope.run(
+      view.state.doc.toString(),
+      (next, err) => {
+        setStatus(next);
+        if (isActive(next)) return;
         stop = undefined;
-        if (end.kind === 'finished' && end.error) setError(end.error);
-        setNote(endNote(end));
+        if (err) setError(err);
+        setNote(END_NOTE[next] ?? '');
       },
-    });
+      (text) => setOutput((prev) => prev + text),
+    );
   };
 
   const runFromKeyboard = () => {
