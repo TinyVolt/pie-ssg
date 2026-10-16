@@ -1,55 +1,8 @@
+import PIE_PY from './py/pie.py?raw';
+import PIE_MPL_PY from './py/pie_mpl.py?raw';
+import SHOW_FIGURES from './py/show_figures.py?raw';
+
 const BASE = 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/';
-const PIE_PY = `
-from pyodide.ffi import run_sync, to_js
-from js import Object
-import bridge
-
-class Node:
-    def __init__(self, id, type):
-        self.id = id
-        self.type = type
-
-    def __repr__(self):
-        return f"{self.type}({self.id})"
-
-def _arg(a):
-    return {"id": a.id} if isinstance(a, Node) else a
-
-def __getattr__(name):
-    if name.startswith("_"):
-        raise AttributeError(name)
-    def fn(*args, out=None):
-        js_args = to_js([_arg(a) for a in args], dict_converter=Object.fromEntries)
-        result = run_sync(bridge.call(name, js_args, out))
-        return Node(result.id, result.type)
-    return fn
-`;
-
-// Matplotlib backend: `plt.show()` sends each open figure to the editor as a PNG, then closes it.
-const PIE_MPL_PY = `
-import base64, io, sys
-import bridge
-from matplotlib._pylab_helpers import Gcf
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-
-def show(*args, **kwargs):
-    # Text printed before the plot must reach the editor first.
-    sys.stdout.flush()
-    sys.stderr.flush()
-    for manager in Gcf.get_all_fig_managers():
-        buf = io.BytesIO()
-        manager.canvas.figure.savefig(buf, format="png")
-        bridge.plot(base64.b64encode(buf.getvalue()).decode())
-    Gcf.destroy_all()
-`;
-
-// Shows the figures a run left open, then closes them so they don't carry over to the next run.
-const SHOW_FIGURES = `
-import sys
-if "matplotlib.pyplot" in sys.modules:
-    sys.modules["matplotlib.pyplot"].show()
-    sys.modules["matplotlib.pyplot"].close("all")
-`;
 
 const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
 let next = 0;
