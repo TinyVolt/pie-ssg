@@ -8,6 +8,8 @@ interface Run {
   code: string;
   onStatus: (status: RunStatus, error?: string) => void;
   onOutput: (text: string) => void;
+  /** `png`: a matplotlib figure as a base64 PNG. */
+  onPlot: (png: string) => void;
 }
 
 let worker: Worker | undefined;
@@ -41,6 +43,9 @@ function onMessage(this: Worker, { data }: MessageEvent) {
   }
   if (data.type === 'output') {
     run?.onOutput(data.text);
+  }
+  if (data.type === 'plot') {
+    run?.onPlot(data.png);
   }
   if (data.type === 'done') {
     finish(data.error);
@@ -94,8 +99,8 @@ export class PythonScope {
   constructor(readonly store?: NodeStore) {}
 
   /** Queues `code`. Returns a stop function. `error` comes only with `finished`. */
-  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput']): () => void {
-    const run: Run = { scope: this, code, onStatus, onOutput };
+  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput'], onPlot: Run['onPlot']): () => void {
+    const run: Run = { scope: this, code, onStatus, onOutput, onPlot };
     queue.push(run);
     onStatus('waiting');
     startNext();

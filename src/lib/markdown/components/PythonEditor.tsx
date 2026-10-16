@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { Accessor, createSignal, For, onCleanup, onMount, Setter, Show } from 'solid-js';
 import { basicSetup, EditorView } from 'codemirror';
 import { keymap } from '@codemirror/view';
 import { python } from '@codemirror/lang-python';
@@ -22,6 +22,11 @@ const END_NOTE: Partial<Record<RunStatus, string>> = {
 const isActive = (status: RunStatus | 'idle') =>
   status === 'waiting' || status === 'loading' || status === 'running';
 
+/** One piece of a run's output. Text printed in a row is one entry. */
+type OutputEntry =
+  | { type: 'text'; text: Accessor<string>; setText: Setter<string> }
+  | { type: 'plot'; png: string };
+
 /** An editable block of Python. Run draws its `pie.*` calls on the scope's canvas. */
 export function PythonEditor(props: { code: string; scope: PythonScope }) {
   let host!: HTMLDivElement;
@@ -29,14 +34,24 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
   let stop: (() => void) | undefined;
 
   const [status, setStatus] = createSignal<RunStatus | 'idle'>('idle');
-  const [output, setOutput] = createSignal('');
+  const [output, setOutput] = createSignal<OutputEntry[]>([]);
   const [error, setError] = createSignal('');
   const [note, setNote] = createSignal('');
   const active = () => isActive(status());
 
+  const addText = (text: string) => {
+    const last = output().at(-1);
+    if (last?.type === 'text') {
+      last.setText((prev) => prev + text);
+      return;
+    }
+    const [value, setValue] = createSignal(text);
+    setOutput((prev) => [...prev, { type: 'text', text: value, setText: setValue }]);
+  };
+
   const run = () => {
     if (active() || !view) return;
-    setOutput('');
+    setOutput([]);
     setError('');
     setNote('');
     stop = props.scope.run(
@@ -48,7 +63,8 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
         if (err) setError(err);
         setNote(END_NOTE[next] ?? '');
       },
-      (text) => setOutput((prev) => prev + text),
+      addText,
+      (png) => setOutput((prev) => [...prev, { type: 'plot', png }]),
     );
   };
 
@@ -93,12 +109,24 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
         </button>
         <span class="python-editor-status">{STATUS_TEXT[status()]}</span>
       </div>
-      <Show when={output() || error() || note()}>
-        <pre class="python-editor-output">
-          {output()}
-          <span class="python-editor-error">{error()}</span>
-          <span class="python-editor-note">{note()}</span>
-        </pre>
+      <Show when={output().length > 0 || error() || note()}>
+        <div class="python-editor-output">
+          <For each={output()}>
+            {(entry) =>
+              entry.type === 'text' ? (
+                <pre class="python-editor-text">{entry.text()}</pre>
+              ) : (
+                <img class="python-editor-plot" src={`data:image/png;base64,${entry.png}`} alt="Plot" />
+              )
+            }
+          </For>
+          <Show when={error() || note()}>
+            <pre class="python-editor-text">
+              <span class="python-editor-error">{error()}</span>
+              <span class="python-editor-note">{note()}</span>
+            </pre>
+          </Show>
+        </div>
       </Show>
     </div>
   );
