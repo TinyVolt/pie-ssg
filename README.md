@@ -1,3 +1,5 @@
+<img src="public/logo.svg" alt="pie-ssg logo" width="96">
+
 # pie-ssg
 
 [![npm](https://img.shields.io/npm/v/@tinyvolt/create-pie)](https://www.npmjs.com/package/@tinyvolt/create-pie)
