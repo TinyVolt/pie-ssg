@@ -11,7 +11,11 @@ class Node:
         return f"{self.type}({self.id})"
 
 def _arg(a):
-    return {"id": a.id} if isinstance(a, Node) else a
+    if isinstance(a, Node):
+        return {"id": a.id}
+    if isinstance(a, (list, tuple)):
+        return [_arg(x) for x in a]
+    return a
 
 def __getattr__(name):
     if name.startswith("_"):

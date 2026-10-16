@@ -85,6 +85,14 @@ export interface PointGradNode extends Node {
   dy: Dtype;
 }
 
+/** `items` in row-major order: shape [2, 3] holds row 0's three items, then row 1's. */
+export interface ArrayNode extends Node {
+  type: 'Array';
+  itemType: NodeType;
+  shape: number[];
+  items: AnyNode[];
+}
+
 export interface DummyNode extends Node {
   type: 'Dummy';
 }
@@ -101,6 +109,7 @@ export interface NodeTypeMap {
   BezierCubic: BezierCubicNode;
   Arc: ArcNode;
   PointGrad: PointGradNode;
+  Array: ArrayNode;
   Dummy: DummyNode;
 }
 
