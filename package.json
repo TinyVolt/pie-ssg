@@ -13,7 +13,7 @@
     "@jax-js/jax": "^0.1.25",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^1.0.0",
-    "@solidjs/start": "^2.0.0",
+    "@solidjs/start": "2.0.6",
     "codemirror": "^6.0.2",
     "katex": "^0.19.0",
     "marked": "^18.1.1",

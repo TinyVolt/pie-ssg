@@ -1,5 +1,6 @@
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { execute } from '~/lib/nodes/execute';
+import { getItem } from '~/lib/nodes/tensors/tensor';
 
 export type RunStatus = 'waiting' | 'loading' | 'running' | 'finished' | 'stopped' | 'killed';
 
@@ -8,6 +9,8 @@ interface Run {
   code: string;
   onStatus: (status: RunStatus, error?: string) => void;
   onOutput: (text: string) => void;
+  /** `png`: a matplotlib figure as a base64 PNG. */
+  onPlot: (png: string) => void;
 }
 
 let worker: Worker | undefined;
@@ -24,7 +27,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     loaded = true;
     run?.onStatus('running');
   }
-  if (data.type === 'call') {
+  if (data.type === 'call' || data.type === 'item') {
     // A reply from before a kill must not reach the new worker.
     const reply = (msg: { result?: unknown; error?: string }) => {
       if (worker === this) this.postMessage({ type: 'reply', reqId: data.reqId, ...msg });
@@ -34,6 +37,14 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       reply({ error: 'this page has no canvas' });
       return;
     }
+    if (data.type === 'item') {
+      try {
+        reply({ result: getItem(store, data.arrayId, data.position) });
+      } catch (err) {
+        reply({ error: message(err) });
+      }
+      return;
+    }
     execute(store, data.keyword, data.args, data.out).then(
       (result) => reply({ result }),
       (err) => reply({ error: message(err) }),
@@ -41,6 +52,9 @@ function onMessage(this: Worker, { data }: MessageEvent) {
   }
   if (data.type === 'output') {
     run?.onOutput(data.text);
+  }
+  if (data.type === 'plot') {
+    run?.onPlot(data.png);
   }
   if (data.type === 'done') {
     finish(data.error);
@@ -94,8 +108,8 @@ export class PythonScope {
   constructor(readonly store?: NodeStore) {}
 
   /** Queues `code`. Returns a stop function. `error` comes only with `finished`. */
-  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput']): () => void {
-    const run: Run = { scope: this, code, onStatus, onOutput };
+  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput'], onPlot: Run['onPlot']): () => void {
+    const run: Run = { scope: this, code, onStatus, onOutput, onPlot };
     queue.push(run);
     onStatus('waiting');
     startNext();

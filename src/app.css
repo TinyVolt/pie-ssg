@@ -297,13 +297,22 @@ pre:has(> code.language-python-editor) {
 }
 
 .python-editor-output {
-  margin: 0;
   padding: 0.5rem;
-  max-height: 20rem;
-  overflow: auto;
   border-top: 1px solid #ddd;
   font-size: 0.875rem;
+}
+
+.python-editor-text {
+  margin: 0;
+  max-height: 20rem;
+  overflow: auto;
   white-space: pre-wrap;
+}
+
+.python-editor-plot {
+  display: block;
+  max-width: 100%;
+  height: auto;
 }
 
 .python-editor-error {

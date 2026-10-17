@@ -2,7 +2,7 @@ export default function Home() {
   return (
     <main>
       <h1>pie-ssg</h1>
-      <h2>A markdown based static-site generator for math and science</h2>
+      <h2>A Markdown-based SSG for interactive science explainers</h2>
       <a href="/pages">Pages</a>
     </main>
   );

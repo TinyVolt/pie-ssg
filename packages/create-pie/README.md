@@ -1,6 +1,6 @@
 # @tinyvolt/create-pie
 
-Creates a new [pie-ssg](https://github.com/TinyVolt/pie-ssg) site: a markdown-based static-site generator for math and science.
+Creates a new [pie-ssg](https://github.com/TinyVolt/pie-ssg) site: a Markdown-based SSG for interactive science explainers.
 
 ## Usage
 

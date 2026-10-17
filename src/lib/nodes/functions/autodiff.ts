@@ -3,6 +3,7 @@ import { getFunction } from './registry';
 import { AnyNode, ScalarNode } from '../state/Node';
 import { ref, Dtype } from '../jax';
 import { Graph, replay, gradient } from '~/lib/autodiff';
+import { computeBlueprint } from '../tensors/broadcast';
 
 /** The number fields of each node type `partial` can differentiate with respect to. */
 const NUMBER_FIELDS: Record<string, string[]> = { Scalar: ['value'], Point: ['x', 'y'] };
@@ -16,7 +17,7 @@ const nodeGraph: Graph<AnyNode> = {
     const func = getFunction(deps.funcKeyword);
     if (!func) throw new Error(`Unknown function: ${deps.funcKeyword}`);
     const key = deps.blueprintKey ?? 'main';
-    const data = func.compute(inputs)[key];
+    const data = computeBlueprint(func, inputs)[key];
     if (!data) throw new Error(`${deps.funcKeyword} gave no '${key}' output`);
     return { ...data, id: node.id, __graph_deps: { ...deps, inputNodes: inputs } };
   },
@@ -34,6 +35,7 @@ export const Partial: Node2NodeFunc = {
   keyword: 'partial', 
   outputType: 'Scalar',
   resolveOutputType: (inputs) => (inputs[1].type === 'Point' ? 'PointGrad' : 'Scalar'),
+  broadcastable: false,
   parameters: [{ name: 'target', type: 'Scalar' }, { name: 'var', type: ['Scalar', 'Point'] }],
   compute(inputs) {
     const target = inputs[0] as ScalarNode;
