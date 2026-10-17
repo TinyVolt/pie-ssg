@@ -2,6 +2,7 @@ import { NodeType } from '../state/Node';
 import { batch, createComputed, createMemo, createRoot, onCleanup } from 'solid-js';
 import { AnyNode } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
+import { computeBlueprint } from '../tensors/broadcast';
 
 export interface ParameterDefinition {
   name: string;
@@ -22,6 +23,8 @@ export interface Node2NodeFunc {
   /** For a function whose output type depends on its inputs. Used to name the output. */
   resolveOutputType?: (inputs: AnyNode[]) => NodeType;
   parameters: ParameterDefinition[];
+  /** False: passing an array is an error instead of a loop over its items. Default true. */
+  broadcastable?: boolean;
   compute: (inputs: AnyNode[]) => Record<string, BlueprintNode>;
 }
 
@@ -136,7 +139,7 @@ export class NodeReconciler {
         const inputs = inputNodeIds.map(id => store.getNodeValue(id));
         if (inputs.some(node => !node || node.type === 'Dummy')) return null;
         try {
-          const blueprint = func.compute(inputs as AnyNode[]);
+          const blueprint = computeBlueprint(func, inputs as AnyNode[]);
           blueprintInputs = inputs as AnyNode[];
           if (graceTimer !== undefined) {
             clearTimeout(graceTimer);

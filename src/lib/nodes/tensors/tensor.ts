@@ -1,5 +1,6 @@
-import type { Arg } from './execute';
-import { NodeType } from './state/Node';
+import type { Arg, ExecuteResult } from '../execute';
+import type { NodeStore } from '../state/NodeStore';
+import { NodeType } from '../state/Node';
 
 export type LeafArg = Exclude<Arg, Arg[]>;
 
@@ -19,6 +20,15 @@ export function listShape(list: Arg[]): number[] {
 export async function sha256(text: string): Promise<string> {
   const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
   return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
+/** The node at `position` of array `arrayId`'s items. Creates nothing. */
+export function getItem(store: NodeStore, arrayId: string, position: number): ExecuteResult {
+  const array = store.getNodeValue(arrayId);
+  if (array?.type !== 'Array') throw new Error(`'${arrayId}' is not an array`);
+  const item = array.items[position];
+  if (item.type === 'Dummy') throw new Error(`item ${position} of '${arrayId}' is Dummy`);
+  return { id: item.id, type: item.type };
 }
 
 /** The one type all items of a nested list share. `typeOf` gives an item's type. */

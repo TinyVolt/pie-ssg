@@ -7,19 +7,25 @@ const BASE = 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/';
 const pending = new Map<number, { resolve: (v: unknown) => void; reject: (e: Error) => void }>();
 let next = 0;
 
-const call = (keyword: string, args: unknown[], out?: string) =>
+/** Posts `message` to the page and waits for its reply. */
+const request = (message: object) =>
   new Promise((resolve, reject) => {
     const reqId = next++;
     pending.set(reqId, { resolve, reject });
-    postMessage({ type: 'call', reqId, keyword, args, out });
+    postMessage({ ...message, reqId });
   });
+
+const call = (keyword: string, args: unknown[], out?: string) => request({ type: 'call', keyword, args, out });
+
+/** The node at `position` of an array's items. Creates nothing. */
+const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
 
 const ready = (async () => {
   const { loadPyodide } = await import(/* @vite-ignore */ `${BASE}pyodide.mjs`);
   const py = await loadPyodide({ indexURL: BASE, env: { MPLBACKEND: 'module://pie_mpl' } });
   py.setStdout({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
-  py.registerJsModule('bridge', { call, plot: (png: string) => postMessage({ type: 'plot', png }) });
+  py.registerJsModule('bridge', { call, item, plot: (png: string) => postMessage({ type: 'plot', png }) });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
   py.FS.writeFile('/home/pyodide/pie_mpl.py', PIE_MPL_PY);
   postMessage({ type: 'loaded' });

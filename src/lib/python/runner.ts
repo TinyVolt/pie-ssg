@@ -1,5 +1,6 @@
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { execute } from '~/lib/nodes/execute';
+import { getItem } from '~/lib/nodes/tensors/tensor';
 
 export type RunStatus = 'waiting' | 'loading' | 'running' | 'finished' | 'stopped' | 'killed';
 
@@ -26,7 +27,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     loaded = true;
     run?.onStatus('running');
   }
-  if (data.type === 'call') {
+  if (data.type === 'call' || data.type === 'item') {
     // A reply from before a kill must not reach the new worker.
     const reply = (msg: { result?: unknown; error?: string }) => {
       if (worker === this) this.postMessage({ type: 'reply', reqId: data.reqId, ...msg });
@@ -34,6 +35,14 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     const store = run?.scope.store;
     if (!store) {
       reply({ error: 'this page has no canvas' });
+      return;
+    }
+    if (data.type === 'item') {
+      try {
+        reply({ result: getItem(store, data.arrayId, data.position) });
+      } catch (err) {
+        reply({ error: message(err) });
+      }
       return;
     }
     execute(store, data.keyword, data.args, data.out).then(
