@@ -27,5 +27,9 @@ gitignore
 .DS_Store
 Thumbs.db
 
+# Python
+__pycache__/
+
 # Built by packages/create-pie/copy-template.js
 packages/create-pie/template
+todo/**
