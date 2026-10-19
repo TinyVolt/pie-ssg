@@ -28,7 +28,7 @@ Requires Node 24.
 
 ```
 my-site/
-  pages/       your markdown pages, served at /pages/<name>
+  pages/       your markdown pages, served at /<name>
   functions/   your own pie.* functions, callable from Python editors
   public/      static files
   src/         the pie-ssg app

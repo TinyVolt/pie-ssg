@@ -8,7 +8,7 @@ export default function Pages() {
         <For each={slugs}>
           {slug => (
             <li>
-              <a href={`/pages/${slug}`}>{slug}</a>
+              <a href={`/${slug}`}>{slug}</a>
             </li>
           )}
         </For>
