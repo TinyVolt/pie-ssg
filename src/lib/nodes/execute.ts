@@ -73,6 +73,22 @@ async function resolveArg(arg: Arg, store: NodeStore): Promise<string> {
   return saveLiteral(store, { id, type: 'Text', value: arg } as TextNode);
 }
 
+/** Checks `out`, the id asked for the output node of a call with arguments `args`. */
+export function checkOut(keyword: string, out: unknown, args: Arg[]) {
+  if (out === undefined) return;
+  if (typeof out !== 'string' || out === '') {
+    throw new Error(`${keyword}: out must be a non-empty string`);
+  }
+  // Ids starting with '_' are kept for the hidden number and text nodes.
+  if (out.startsWith('_')) {
+    throw new Error(`${keyword}: out must not start with '_'`);
+  }
+  // A node that is its own input would update forever.
+  if (leaves(args).some(arg => typeof arg === 'object' && arg.id === out)) {
+    throw new Error(`${keyword}: out='${out}' is also an input`);
+  }
+}
+
 /** `out` is the id for the output node. Without it the id is generated. */
 export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string): Promise<ExecuteResult> {
   const func = getFunction(keyword);
@@ -106,19 +122,7 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   });
   if (broadcastInputShapes.length > 0) broadcastShapes(broadcastInputShapes);
 
-  if (out !== undefined) {
-    if (typeof out !== 'string' || out === '') {
-      throw new Error(`${keyword}: out must be a non-empty string`);
-    }
-    // Ids starting with '_' are kept for the hidden number and text nodes.
-    if (out.startsWith('_')) {
-      throw new Error(`${keyword}: out must not start with '_'`);
-    }
-    // A node that is its own input would update forever.
-    if (leaves(args).some(arg => typeof arg === 'object' && arg.id === out)) {
-      throw new Error(`${keyword}: out='${out}' is also an input`);
-    }
-  }
+  checkOut(keyword, out, args);
 
   const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
 

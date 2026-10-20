@@ -20,12 +20,21 @@ const call = (keyword: string, args: unknown[], out?: string) => request({ type:
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
 
+/** First half of `g(a)` for `g = pie.lift(f, ...)`: the input values and the output id. */
+const lift = (name: string, inputIds: string[], kind: string, out?: string) =>
+  request({ type: 'lift', name, inputIds, kind, out });
+
+/** Second half of `g(a)`: the first result. Python doesn't wait for a reply. */
+const lift_save = (save: object) => postMessage({ type: 'lift_save', ...save });
+
 const ready = (async () => {
   const { loadPyodide } = await import(/* @vite-ignore */ `${BASE}pyodide.mjs`);
   const py = await loadPyodide({ indexURL: BASE, env: { MPLBACKEND: 'module://pie_mpl' } });
   py.setStdout({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
-  py.registerJsModule('bridge', { call, item, plot: (png: string) => postMessage({ type: 'plot', png }) });
+  py.registerJsModule('bridge', {
+    call, item, lift, lift_save, plot: (png: string) => postMessage({ type: 'plot', png }),
+  });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
   py.FS.writeFile('/home/pyodide/pie_mpl.py', PIE_MPL_PY);
   postMessage({ type: 'loaded' });
@@ -35,6 +44,8 @@ const ready = (async () => {
 // Scope id -> the Python globals its runs share. One scope per page.
 const scopes = new Map<string, any>();
 
+const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
 self.onmessage = async ({ data }) => {
   if (data.type === 'reply') {
     const { resolve, reject } = pending.get(data.reqId)!;
@@ -43,7 +54,6 @@ self.onmessage = async ({ data }) => {
     else resolve(data.result);
   }
   if (data.type === 'run') {
-    const message = (e: unknown) => (e instanceof Error ? e.message : String(e));
     let error: string | undefined;
     try {
       const py = await ready;
@@ -66,6 +76,29 @@ self.onmessage = async ({ data }) => {
       error ??= message(e);
     }
     postMessage({ type: 'done', error });
+  }
+  // The page sends reruns only between runs, so this never interleaves with a run.
+  if (data.type === 'rerun') {
+    let result: unknown;
+    let error: string | undefined;
+    try {
+      const py = await ready;
+      const globals = scopes.get(data.scope);
+      if (!globals) throw new Error("Python was restarted, so this node can't rerun. Run the block that made it again.");
+      const pie = py.pyimport('pie');
+      const values = py.toPy(data.values);
+      try {
+        const out = pie._rerun(globals, data.nodeId, values);
+        result = out.toJs({ dict_converter: Object.fromEntries });
+        out.destroy();
+      } finally {
+        values.destroy();
+        pie.destroy();
+      }
+    } catch (e) {
+      error = message(e);
+    }
+    postMessage({ type: 'rerun_done', reqId: data.reqId, result, error });
   }
   if (data.type === 'dispose') {
     scopes.get(data.scope)?.destroy();

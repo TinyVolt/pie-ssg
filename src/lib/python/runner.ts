@@ -1,6 +1,7 @@
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { execute } from '~/lib/nodes/execute';
 import { getItem } from '~/lib/nodes/tensors/tensor';
+import { saveLift, startLift, type InputValue, type PyResult } from './lift';
 
 export type RunStatus = 'waiting' | 'loading' | 'running' | 'finished' | 'stopped' | 'killed';
 
@@ -19,6 +20,20 @@ let active: Run | undefined;
 const queue: Run[] = [];
 let nextScopeId = 0;
 
+/** A request to rerun the `pie.lift`ed function of node `nodeId` with new input values. */
+interface Rerun {
+  scope: PythonScope;
+  nodeId: string;
+  values: InputValue[];
+  done: (result?: PyResult, error?: string) => void;
+}
+
+// Reruns waiting for the running block to end, by scope and node id. A newer request replaces a waiting one.
+const waitingReruns = new Map<string, Rerun>();
+// Reruns sent to the worker, by request id.
+const sentReruns = new Map<number, Rerun>();
+let nextRerunId = 0;
+
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 function onMessage(this: Worker, { data }: MessageEvent) {
@@ -27,7 +42,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     loaded = true;
     run?.onStatus('running');
   }
-  if (data.type === 'call' || data.type === 'item') {
+  if (data.type === 'call' || data.type === 'item' || data.type === 'lift') {
     // A reply from before a kill must not reach the new worker.
     const reply = (msg: { result?: unknown; error?: string }) => {
       if (worker === this) this.postMessage({ type: 'reply', reqId: data.reqId, ...msg });
@@ -45,10 +60,32 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       }
       return;
     }
+    if (data.type === 'lift') {
+      try {
+        reply({ result: startLift(store, data.name, data.inputIds, data.kind, data.out) });
+      } catch (err) {
+        reply({ error: message(err) });
+      }
+      return;
+    }
     execute(store, data.keyword, data.args, data.out).then(
       (result) => reply({ result }),
       (err) => reply({ error: message(err) }),
     );
+  }
+  // No reply: Python doesn't wait for it.
+  if (data.type === 'lift_save') {
+    const scope = run?.scope;
+    try {
+      if (scope?.store) saveLift(scope.store, data, (nodeId, values, done) => scope.rerun(nodeId, values, done));
+    } catch (err) {
+      console.error(`${data.name}: ${message(err)}`);
+    }
+  }
+  if (data.type === 'rerun_done') {
+    const rerun = sentReruns.get(data.reqId);
+    sentReruns.delete(data.reqId);
+    rerun?.done(data.result, data.error);
   }
   if (data.type === 'output') {
     run?.onOutput(data.text);
@@ -81,13 +118,30 @@ function finish(error?: string) {
   if (!loaded) killWorker();
   if (run.scope.disposed) worker?.postMessage({ type: 'dispose', scope: run.scope.id });
   run.onStatus('finished', error);
+  sendReruns();
   startNext();
+}
+
+/**
+ * Sends the waiting reruns, unless a block is running. After a kill they wait for the next worker,
+ * which answers that Python was restarted.
+ */
+function sendReruns() {
+  if (active || !worker) return;
+  for (const rerun of waitingReruns.values()) {
+    const reqId = nextRerunId++;
+    sentReruns.set(reqId, rerun);
+    worker.postMessage({ type: 'rerun', reqId, scope: rerun.scope.id, nodeId: rerun.nodeId, values: rerun.values });
+  }
+  waitingReruns.clear();
 }
 
 function killWorker() {
   worker?.terminate();
   worker = undefined;
   loaded = false;
+  // Their replies will never come.
+  sentReruns.clear();
 }
 
 /** Kills Python. The running run and every queued run end as killed. */
@@ -126,11 +180,21 @@ export class PythonScope {
     };
   }
 
+  /** Queues a rerun of node `nodeId`'s `pie.lift`ed function. It waits while a block runs. */
+  rerun(nodeId: string, values: InputValue[], done: Rerun['done']) {
+    if (this.disposed) return;
+    waitingReruns.set(`${this.id}/${nodeId}`, { scope: this, nodeId, values, done });
+    sendReruns();
+  }
+
   /** Frees the variables. Call when the page goes away. */
   dispose() {
     this.disposed = true;
     for (let i = queue.length - 1; i >= 0; i--) {
       if (queue[i].scope === this) queue.splice(i, 1);
+    }
+    for (const [key, rerun] of waitingReruns) {
+      if (rerun.scope === this) waitingReruns.delete(key);
     }
     // A running run still uses the variables; `finish` frees them.
     if (active?.scope !== this) worker?.postMessage({ type: 'dispose', scope: this.id });
