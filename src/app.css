@@ -1,9 +1,9 @@
 body {
   margin: 0;
-  color: #1a1a1a;
-  background: #fff;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  line-height: 1.6;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: var(--font-ui);
+  line-height: var(--line-height);
 }
 
 a {
@@ -22,7 +22,7 @@ a {
   align-items: baseline;
   gap: 1.5rem;
   padding: 0.75rem 1.5rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .site-header-title {
@@ -36,12 +36,12 @@ a {
 }
 
 .site-header-nav a {
-  color: #555;
+  color: var(--color-muted);
   text-decoration: none;
 }
 
 .site-header-nav a:hover {
-  color: #000;
+  color: var(--color-hover);
   text-decoration: underline;
 }
 
@@ -49,11 +49,11 @@ a {
 main {
   box-sizing: border-box;
   width: 100%;
-  max-width: 40rem;
+  max-width: var(--content-width);
   margin: 0 auto;
   padding: 2rem 1.5rem 4rem;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 1.125rem;
+  font-family: var(--font-body);
+  font-size: var(--font-size-body);
 }
 
 main h1,
@@ -93,13 +93,13 @@ main li + li {
 main hr {
   margin: 2rem 0;
   border: 0;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--color-border);
 }
 
 main blockquote {
   padding-left: 1rem;
-  border-left: 3px solid #ddd;
-  color: #555;
+  border-left: 3px solid var(--color-border);
+  color: var(--color-muted);
 }
 
 main img {
@@ -107,10 +107,10 @@ main img {
 }
 
 main code {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-family: var(--font-mono);
   font-size: 0.85em;
   padding: 0.1em 0.3em;
-  background: #f4f4f4;
+  background: var(--color-code-bg);
   border-radius: 3px;
 }
 
@@ -118,7 +118,7 @@ main > pre {
   margin: 0 0 1rem;
   padding: 0.75rem 1rem;
   overflow-x: auto;
-  background: #f4f4f4;
+  background: var(--color-code-bg);
   border-radius: 4px;
   line-height: 1.5;
 }
@@ -135,7 +135,7 @@ main table {
 main th,
 main td {
   padding: 0.3rem 0.75rem;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid var(--color-border);
   text-align: left;
 }
 
@@ -180,7 +180,7 @@ main .katex-display {
   position: relative;
   flex: 0 0 6px;
   align-self: stretch;
-  background: #ddd;
+  background: var(--color-border);
   cursor: col-resize;
   z-index: 5;
   transition: background 0.15s ease;
@@ -189,7 +189,7 @@ main .katex-display {
 
 .split-pane-divider:hover,
 .split-pane-divider:active {
-  background: #999;
+  background: var(--color-border-hover);
 }
 
 .split-pane-divider--horizontal {
@@ -216,16 +216,16 @@ main .katex-display {
   width: 1.25rem;
   height: 1.25rem;
   padding: 0;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  color: #666;
+  color: var(--color-subtle);
   cursor: pointer;
 }
 
 .split-pane-button:hover {
-  color: #000;
-  border-color: #999;
+  color: var(--color-hover);
+  border-color: var(--color-border-hover);
 }
 
 /* A canvas page fills the screen below the header. */
@@ -260,9 +260,9 @@ pre:has(> code.language-python-editor) {
 
 .python-editor {
   margin: 1rem 0;
-  border: 1px solid #ddd;
+  border: 1px solid var(--color-border);
   border-radius: 4px;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-ui);
 }
 
 .python-editor .cm-editor {
@@ -274,25 +274,25 @@ pre:has(> code.language-python-editor) {
   align-items: center;
   gap: 0.5rem;
   padding: 0.25rem 0.5rem;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--color-border);
 }
 
 .python-editor-button {
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;
-  background: #fff;
-  border: 1px solid #ddd;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
   border-radius: 4px;
   cursor: pointer;
 }
 
 .python-editor-button:hover {
-  border-color: #999;
+  border-color: var(--color-border-hover);
 }
 
 .python-editor-status {
-  color: #666;
+  color: var(--color-subtle);
   font-size: 0.875rem;
 }
 
@@ -317,7 +317,7 @@ pre:has(> code.language-python-editor) {
 
 .python-editor-output {
   padding: 0.5rem;
-  border-top: 1px solid #ddd;
+  border-top: 1px solid var(--color-border);
   font-size: 0.875rem;
 }
 
@@ -335,9 +335,9 @@ pre:has(> code.language-python-editor) {
 }
 
 .python-editor-error {
-  color: #c00;
+  color: var(--color-error);
 }
 
 .python-editor-note {
-  color: #666;
+  color: var(--color-subtle);
 }

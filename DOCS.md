@@ -42,6 +42,13 @@ pie.scalar(3, out='n')
 
 Now the points are regularly spaced between `0` and `3`. 
 
+## Styling
+Add or modify the existing style in `/styles` folder. Every `.css` file under the `/styles` folder is loaded after the built-in `src/app.css`, so its rules override the defaults. Change the CSS variables in `/styles/theme.css` (colors, fonts, text width), or add your own rules, eg `main h1 { color: crimson; }`.
+
+**Caveat**
+`src/app.css` reads the variables from `/styles/theme.css` and has no fallback values. Deleting `theme.css`, or a variable in it, leaves the site without those colors or fonts.
+
+
 ---
 
 ## Examples
