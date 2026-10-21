@@ -296,6 +296,25 @@ pre:has(> code.language-python-editor) {
   font-size: 0.875rem;
 }
 
+/* ↺ draws small in most fonts. */
+.python-editor-reset {
+  font-size: 1.125rem;
+}
+
+.python-editor-collapse {
+  margin-left: auto;
+}
+
+/* Collapsed: only the toolbar shows. Hidden with CSS so the editor keeps its code. */
+.python-editor-collapsed .python-editor-code,
+.python-editor-collapsed .python-editor-output {
+  display: none;
+}
+
+.python-editor-collapsed .python-editor-toolbar {
+  border-top: none;
+}
+
 .python-editor-output {
   padding: 0.5rem;
   border-top: 1px solid #ddd;

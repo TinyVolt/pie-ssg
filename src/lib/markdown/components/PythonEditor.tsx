@@ -37,7 +37,9 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
   const [output, setOutput] = createSignal<OutputEntry[]>([]);
   const [error, setError] = createSignal('');
   const [note, setNote] = createSignal('');
+  const [collapsed, setCollapsed] = createSignal(false);
   const active = () => isActive(status());
+  const initialCode = props.code.replace(/\n$/, '');
 
   const addText = (text: string) => {
     const last = output().at(-1);
@@ -68,6 +70,18 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
     );
   };
 
+  /** Puts the original code back. Ctrl/Cmd+Z undoes it. */
+  const reset = () => {
+    if (!view) return;
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: initialCode } });
+  };
+
+  const toggleCollapsed = () => {
+    setCollapsed((prev) => !prev);
+    // CodeMirror can't measure while hidden, so measure again once it's shown.
+    if (!collapsed()) view?.requestMeasure();
+  };
+
   const runFromKeyboard = () => {
     run();
     return true;
@@ -75,7 +89,7 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
 
   onMount(() => {
     view = new EditorView({
-      doc: props.code.replace(/\n$/, ''),
+      doc: initialCode,
       extensions: [
         // Before basicSetup, so these win over its Enter bindings.
         keymap.of([
@@ -95,7 +109,7 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
   });
 
   return (
-    <div class="python-editor">
+    <div class="python-editor" classList={{ 'python-editor-collapsed': collapsed() }}>
       <div class="python-editor-code" ref={host} />
       <div class="python-editor-toolbar">
         <button
@@ -107,7 +121,26 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
         >
           {active() ? '■' : '▶'}
         </button>
+        <button
+          type="button"
+          class="python-editor-button python-editor-reset"
+          title="Reset code"
+          aria-label="Reset code"
+          onClick={reset}
+        >
+          ↺
+        </button>
         <span class="python-editor-status">{STATUS_TEXT[status()]}</span>
+        <button
+          type="button"
+          class="python-editor-button python-editor-collapse"
+          title={collapsed() ? 'Expand' : 'Collapse'}
+          aria-label={collapsed() ? 'Expand' : 'Collapse'}
+          aria-expanded={!collapsed()}
+          onClick={toggleCollapsed}
+        >
+          {collapsed() ? '▼' : '▲'}
+        </button>
       </div>
       <Show when={output().length > 0 || error() || note()}>
         <div class="python-editor-output">
