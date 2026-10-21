@@ -1,9 +1,11 @@
+import site from "../../site.yml";
+
 /** The site name and nav links, shown at the top of every page. */
 export function Header() {
   return (
     <header class="site-header">
       <a class="site-header-title" href="/">
-        pie-ssg
+        {site.title}
       </a>
       <nav class="site-header-nav">
         <a href="/about">About</a>

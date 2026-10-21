@@ -12,6 +12,9 @@ export interface ParameterDefinition {
 
 export type BlueprintNode = any;
 
+/** Keyword prefix of nodes made by `pie.lift`ed Python functions, followed by the function's name. Not in the registry. */
+export const PYTHON_KEYWORD_PREFIX = '_python:';
+
 /**
  * How long a reactive recompute error may persist before it is reported.
  */

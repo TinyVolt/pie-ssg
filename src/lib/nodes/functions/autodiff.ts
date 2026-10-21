@@ -1,4 +1,4 @@
-import { Node2NodeFunc } from './Node2NodeFunc';
+import { Node2NodeFunc, PYTHON_KEYWORD_PREFIX } from './Node2NodeFunc';
 import { getFunction } from './registry';
 import { AnyNode, ScalarNode } from '../state/Node';
 import { ref, Dtype } from '../jax';
@@ -14,6 +14,9 @@ const nodeGraph: Graph<AnyNode> = {
   inputs: (node) => node.__graph_deps?.inputNodes,
   recompute(node, inputs) {
     const deps = node.__graph_deps!;
+    if (deps.funcKeyword.startsWith(PYTHON_KEYWORD_PREFIX)) {
+      throw new Error(`partial can't differentiate through Python function '${deps.funcKeyword.slice(PYTHON_KEYWORD_PREFIX.length)}'`);
+    }
     const func = getFunction(deps.funcKeyword);
     if (!func) throw new Error(`Unknown function: ${deps.funcKeyword}`);
     const key = deps.blueprintKey ?? 'main';

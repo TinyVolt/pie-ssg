@@ -1,4 +1,5 @@
 ---
+title: Python editor
 canvas: left
 ---
 # Python editor

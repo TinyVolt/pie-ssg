@@ -50,7 +50,12 @@ Design choices:
 
 ---
 
-### Tensors and broadcasting
+### ✅ Tensors and broadcasting
+A function defined for type `T` should also work for an array of type `T` - another feature pretty common in scientific computing. 
+
+Design choices:
+- Add a new array node in `Node.ts`.
+- Write basic multi-dimensional array logic in `/src/lib/nodes/tensors` on the JS side and extend the definition of `Node` indexing using `__getitem__` on the Python side. 
 
 ---
 

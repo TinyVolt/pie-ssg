@@ -1,0 +1,27 @@
+/*
+ * Site theme. Change these values to restyle the site.
+ * Every `.css` file in `/styles` loads after the built-in `src/app.css`,
+ * so rules added here (or in another file in this folder) override the defaults.
+ */
+:root {
+  /* Colors */
+  --color-text: #1a1a1a;
+  --color-bg: #fff;
+  --color-muted: #555;       /* nav links, blockquotes */
+  --color-subtle: #666;      /* buttons, editor status and notes */
+  --color-hover: #000;       /* links and buttons on hover */
+  --color-border: #ddd;
+  --color-border-hover: #999;
+  --color-code-bg: #f4f4f4;
+  --color-error: #c00;
+
+  /* Fonts */
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;   /* header, editor */
+  --font-body: Georgia, "Times New Roman", serif;                        /* page text */
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; /* code */
+  --font-size-body: 1.125rem;
+  --line-height: 1.6;
+
+  /* Layout */
+  --content-width: 40rem;    /* page text column, about 70 characters */
+}
