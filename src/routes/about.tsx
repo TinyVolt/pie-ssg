@@ -1,9 +1,9 @@
-import { Title } from "@solidjs/meta";
+import { PageTitle } from "~/components/PageTitle";
 
 export default function About() {
   return (
     <main>
-      <Title>About</Title>
+      <PageTitle>About</PageTitle>
       <h1>About</h1>
     </main>
   );
