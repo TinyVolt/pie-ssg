@@ -7,7 +7,7 @@
 
 A Markdown-based SSG for interactive science explainers
 
-See the [roadmap](ROADMAP.md) for planned features.
+See the [roadmap](ROADMAP.md) for planned features and [documentation](DOCS.md) for existing features.
 
 ## Create a site
 
