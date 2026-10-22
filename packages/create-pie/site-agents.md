@@ -83,6 +83,8 @@ pie.scalar(3, out='r')   # the circle above now has radius 3
 
 Common mistake: `center = pie.point(1, 2)` does not give the node the id `center`. It gets an automatic id. Use `pie.point(1, 2, out='center')`.
 
+`unit` is a system node: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
+
 Built-in functions:
 
 | Call | Makes |
@@ -102,6 +104,21 @@ Built-in functions:
 | `pie.partial(target, var)` | the derivative of scalar `target` with respect to `var`. `var` is a scalar node (gives a number) or a point node (gives an arrow at the point). |
 
 Arguments can be nodes or plain numbers. Passing an array where one item is expected runs the function once per item (except `partial`).
+
+### Side effects
+
+These change existing nodes instead of making a new one. They run once, when called.
+
+| Call | Does |
+| --- | --- |
+| `pie.clear()` | removes every node and resets `unit` (pixels per grid unit) to 50 |
+| `pie.translate_point_to(p, x, y)` | moves point `p` to (x, y) |
+| `pie.translate_point_by(p, dx, dy)` | moves point `p` by (dx, dy) |
+| `pie.translate_scalar_to(s, value)` | sets scalar `s` to `value` |
+| `pie.translate_scalar_by(s, delta)` | adds `delta` to scalar `s` |
+
+- `p` or `s` can be an array: every item moves.
+- A moved node stops following the nodes it was built from. Nodes built from it follow the move.
 
 ### Lifting a Python function: `pie.lift`
 
@@ -145,6 +162,7 @@ export const Midpoint: Node2NodeFunc = {
 - `compute` returns an object whose `main` entry is the output node. Other entries are extra nodes drawn alongside it.
 - Do the math with the helpers in `~/lib/nodes/jax` (`add`, `sub`, `mul`, `div`, `sqrt`, `sin`, `cos`, `atan2`, …), not plain JS operators. Wrap a node's number field in `ref(...)` before using it. These keep `pie.partial` working on your function.
 - Node types and their fields are in `src/lib/nodes/state/Node.ts`.
+- A file can also export a `SideEffectFunc` (same module as `Node2NodeFunc`): `keyword`, `parameters`, and `run(inputs, store)`, which changes the store instead of returning nodes. See `src/lib/nodes/functions/sideEffects.ts`.
 - A keyword used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Your own node types: `nodes/`
