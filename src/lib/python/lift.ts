@@ -25,6 +25,7 @@ export interface LiftSave extends PyResult {
   inputIds: string[];
   kind: Kind;
   itemType?: ItemType;
+  hidden: boolean;
 }
 
 export type Rerun = (nodeId: string, values: InputValue[], done: (result?: PyResult, error?: string) => void) => void;
@@ -63,7 +64,7 @@ function toBlueprint(kind: Kind, itemType: ItemType | undefined, { shape, values
  * the node keeps its value and asks `rerun` for a new one. Rerun errors go to the console.
  */
 export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
-  const { id, name, inputIds, kind, itemType } = save;
+  const { id, name, inputIds, kind, itemType, hidden } = save;
   const [blueprint, setBlueprint] = createSignal(toBlueprint(kind, itemType, save));
   // The input values of the latest result or rerun request. Unset until the first compute, which uses the first result.
   let requested: string | undefined;
@@ -88,5 +89,5 @@ export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
       return blueprint();
     },
   };
-  new NodeReconciler().evaluate(func, inputIds, store, id);
+  new NodeReconciler().evaluate(func, inputIds, store, id, hidden);
 }

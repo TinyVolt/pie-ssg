@@ -90,7 +90,7 @@ export function checkOut(keyword: string, out: unknown, args: Arg[]) {
 }
 
 /** `out` is the id for the output node. Without it the id is generated. */
-export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string): Promise<ExecuteResult> {
+export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string, hidden?: boolean): Promise<ExecuteResult> {
   const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
@@ -123,6 +123,7 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   if (broadcastInputShapes.length > 0) broadcastShapes(broadcastInputShapes);
 
   checkOut(keyword, out, args);
+  if ('run' in func && hidden !== undefined) throw new Error(`${keyword} does not take hidden`);
 
   const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
 
@@ -138,7 +139,7 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
     ? 'Array'
     : func.resolveOutputType?.(inputNodeIds.map(id => store.getNodeValue(id)!)) ?? func.outputType;
   const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(outputType));
-  new NodeReconciler().evaluate(func, inputNodeIds, store, id);
+  new NodeReconciler().evaluate(func, inputNodeIds, store, id, hidden);
 
   const node = store.getNodeValue(id);
   if (node?.type === 'Array') return { id, type: node.type, shape: node.shape, itemType: node.itemType };

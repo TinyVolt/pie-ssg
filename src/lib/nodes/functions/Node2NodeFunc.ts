@@ -131,7 +131,8 @@ export class NodeReconciler {
     return { hasMissingDependency };
   }
 
-  evaluate(func: Node2NodeFunc, inputNodeIds: string[], store: NodeStore, assignedId?: string) {
+  /** `hidden` is set on every node the call makes: the main node and the others in the blueprint. */
+  evaluate(func: Node2NodeFunc, inputNodeIds: string[], store: NodeStore, assignedId?: string, hidden = false) {
     createRoot((disposeRoot) => {
       const localToGlobal = new Map<string, LocalMeta>();
 
@@ -173,7 +174,7 @@ export class NodeReconciler {
       }, null);
       firstRunDone = true;
 
-      this.reconcile(blueprintMemo, () => blueprintInputs, localToGlobal, func, assignedId, store, disposeRoot);
+      this.reconcile(blueprintMemo, () => blueprintInputs, localToGlobal, func, assignedId, hidden, store, disposeRoot);
     }) // outer `createRoot` ends here
   }
 
@@ -183,6 +184,7 @@ export class NodeReconciler {
     localToGlobal: Map<string, LocalMeta>,
     func: Node2NodeFunc,
     assignedId: string | undefined,
+    hidden: boolean,
     store: NodeStore,
     disposeRoot: () => void
   ) {
@@ -230,6 +232,7 @@ export class NodeReconciler {
                 const transformedData = {
                   ...data,
                   id: globalId,
+                  hidden,
                   __graph_deps: {
                     funcKeyword: func.keyword,
                     inputNodes: inputsAccessor(),

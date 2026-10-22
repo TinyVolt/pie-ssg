@@ -78,6 +78,17 @@ export class NodeStore {
     this.setNodes(id, { signal, dispose });
   }
 
+  /** Sets `props` on node `id`. Unlike `saveNode`, the node keeps following its inputs. */
+  public updateNode(id: string, props: Partial<AnyNode>) {
+    // Read out now: `setNodes` merges into the stored entry, so it would overwrite them.
+    const { signal: oldSignal, dispose: oldDispose } = this.nodes[id];
+    createRoot((dispose) => {
+      const signal = createMemo(() => ({ ...oldSignal(), ...props } as AnyNode));
+      // Not `saveNode`: that would dispose the old node, which the new one reads.
+      this.setNodes(id, { signal, dispose: () => { dispose(); oldDispose?.(); } });
+    });
+  }
+
   public getNodeValue(id: string): AnyNode | undefined {
     return this.nodes[id]?.signal();
   }

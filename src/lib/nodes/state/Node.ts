@@ -15,6 +15,7 @@ import {
 export interface Node {
   id: string;
   type: string;
+  hidden?: boolean;
   __graph_deps?: {
     funcKeyword: string;
     inputNodes: AnyNode[];
@@ -181,4 +182,9 @@ for (const [file, defs] of definitionsByFile) {
 
 export function getNodeDefinition(type: string): NodeDefinition | undefined {
   return nodeDefinitions.get(type);
+}
+
+/** Every node type, built-in and the site's own. */
+export function getNodeTypes(): NodeType[] {
+  return [...nodeDefinitions.keys()] as NodeType[];
 }

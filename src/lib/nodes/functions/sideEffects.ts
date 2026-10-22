@@ -1,6 +1,6 @@
 import { createMemo, createRoot } from 'solid-js';
 import { SideEffectFunc } from './Node2NodeFunc';
-import { AnyNode, PointNode, ScalarNode } from '../state/Node';
+import { AnyNode, PointNode, ScalarNode, getNodeTypes } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
 import { add, ref } from '../jax';
 
@@ -10,6 +10,33 @@ function replaceNode(store: NodeStore, node: AnyNode) {
     store.saveNode(node.id, createMemo(() => node), dispose);
   });
 }
+
+// Any node, but not a whole Array: an Array is looped over, so each item is hidden or shown.
+const anyItem = getNodeTypes().filter(type => type !== 'Array');
+
+/**
+ * Hide a node: it is not drawn on the canvas.
+ * @param node - Node to hide
+ */
+export const Hide: SideEffectFunc = {
+  keyword: 'hide',
+  parameters: [{ name: 'node', type: anyItem }],
+  run(inputs, store) {
+    store.updateNode(inputs[0].id, { hidden: true });
+  },
+};
+
+/**
+ * Show a hidden node.
+ * @param node - Node to show
+ */
+export const Show: SideEffectFunc = {
+  keyword: 'show',
+  parameters: [{ name: 'node', type: anyItem }],
+  run(inputs, store) {
+    store.updateNode(inputs[0].id, { hidden: false });
+  },
+};
 
 /**
  * Clear the canvas and reset the system nodes.
@@ -33,7 +60,7 @@ export const TranslatePointTo: SideEffectFunc = {
   parameters: [{ name: 'point', type: 'Point' }, { name: 'x', type: 'Scalar' }, { name: 'y', type: 'Scalar' }],
   run(inputs, store) {
     const [point, x, y] = inputs as [PointNode, ScalarNode, ScalarNode];
-    replaceNode(store, { id: point.id, type: 'Point', x: ref(x.value), y: ref(y.value) });
+    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, x: ref(x.value), y: ref(y.value) });
   },
 };
 
@@ -50,7 +77,7 @@ export const TranslatePointBy: SideEffectFunc = {
     const [point, dx, dy] = inputs as [PointNode, ScalarNode, ScalarNode];
     const x = add(ref(point.x), ref(dx.value));
     const y = add(ref(point.y), ref(dy.value));
-    replaceNode(store, { id: point.id, type: 'Point', x, y });
+    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, x, y });
   },
 };
 

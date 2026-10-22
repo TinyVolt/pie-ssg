@@ -68,7 +68,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       }
       return;
     }
-    execute(store, data.keyword, data.args, data.out).then(
+    execute(store, data.keyword, data.args, data.out, data.hidden).then(
       (result) => reply({ result }),
       (err) => reply({ error: message(err) }),
     );

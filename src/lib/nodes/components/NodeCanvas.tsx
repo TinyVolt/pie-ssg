@@ -23,7 +23,7 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     for (const nodeSignal of Object.values(props.store.nodes)) {
       if (!nodeSignal) continue;
       const node = nodeSignal.signal();
-      if (!node || node.type === 'Dummy') continue;
+      if (!node || node.type === 'Dummy' || node.hidden) continue;
       if (node.type === 'Point') points.push(nodeSignal);
       else geometry.push(nodeSignal);
     }

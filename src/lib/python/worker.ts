@@ -15,7 +15,8 @@ const request = (message: object) =>
     postMessage({ ...message, reqId });
   });
 
-const call = (keyword: string, args: unknown[], out?: string) => request({ type: 'call', keyword, args, out });
+const call = (keyword: string, args: unknown[], out?: string, hidden?: boolean) =>
+  request({ type: 'call', keyword, args, out, hidden });
 
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });

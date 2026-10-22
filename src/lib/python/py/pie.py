@@ -75,10 +75,10 @@ def _arg(a):
         return [_arg(x) for x in a]
     return a
 
-def _call(name, args, out=None):
+def _call(name, args, out=None, hidden=None):
     _check_bridge()
     js_args = to_js([_arg(a) for a in args], dict_converter=Object.fromEntries)
-    return _node(run_sync(bridge.call(name, js_args, out)))
+    return _node(run_sync(bridge.call(name, js_args, out, hidden)))
 
 # Above 0 while a function passed to `pie.lift` runs. It can't reach the page: a rerun runs outside any block.
 _lift_depth = 0
@@ -118,12 +118,12 @@ def lift(fn, out_type):
     target = name if name is not None and scope.get(name) is fn else fn
     label = name or repr(fn)
 
-    def lifted(*args, out=None, **kwargs):
-        return _lifted_node(scope, target, label, returns, args, kwargs, out)
+    def lifted(*args, out=None, hidden=False, **kwargs):
+        return _lifted_node(scope, target, label, returns, args, kwargs, out, hidden)
     lifted.__name__ = lifted.__qualname__ = f"lift({label})"
     return lifted
 
-def _lifted_node(scope, target, label, returns, args, kwargs, out):
+def _lifted_node(scope, target, label, returns, args, kwargs, out, hidden):
     _check_bridge()
     ids = []
     def slot(a):
@@ -136,7 +136,7 @@ def _lifted_node(scope, target, label, returns, args, kwargs, out):
     kind, item = returns
     reply = run_sync(bridge.lift(label, to_js(ids), kind, out))
     shape, values = _evaluate(scope, call, reply.values.to_py())
-    save = {"id": reply.id, "name": label, "inputIds": ids, "kind": kind, "itemType": item, "shape": shape, "values": values}
+    save = {"id": reply.id, "name": label, "inputIds": ids, "kind": kind, "itemType": item, "shape": shape, "values": values, "hidden": hidden}
     bridge.lift_save(to_js(save, dict_converter=Object.fromEntries))
     scope.setdefault("__pie_lift__", {})[reply.id] = call
     if kind == "Array":
@@ -206,6 +206,6 @@ def _check_out_type_and_flatten(name, returns, result):
 def __getattr__(name):
     if name.startswith("_"):
         raise AttributeError(name)
-    def fn(*args, out=None):
-        return _call(name, args, out)
+    def fn(*args, out=None, hidden=None):
+        return _call(name, args, out, hidden)
     return fn
