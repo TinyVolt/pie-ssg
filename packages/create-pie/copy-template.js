@@ -12,6 +12,7 @@ const ENTRIES = {
   'pages': 'pages',
   'functions': 'functions',
   'styles': 'styles',
+  'layouts': 'layouts',
   'public': 'public',
   'site.yml': 'site.yml',
   'vite.config.ts': 'vite.config.ts',
