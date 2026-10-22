@@ -5,6 +5,8 @@ Use the frontmatter `canvas` prop to add a canvas to the page. Accepted values a
 
 Each element on the canvas is a `Node`. Each `Node` has an `id`. 
 
+`unit` is a system node: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
+
 ---
 
 ## Python editor

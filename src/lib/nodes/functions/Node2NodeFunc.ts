@@ -31,6 +31,15 @@ export interface Node2NodeFunc {
   compute: (inputs: AnyNode[]) => Record<string, BlueprintNode>;
 }
 
+/** A function that changes the store instead of making a node. It runs once per call, not reactively. */
+export interface SideEffectFunc {
+  keyword: string;
+  parameters: ParameterDefinition[];
+  /** False: passing an array is an error instead of a loop over its items. Default true. */
+  broadcastable?: boolean;
+  run: (inputs: AnyNode[], store: NodeStore) => void;
+}
+
 type LocalMeta = {
   globalId: string;
   disposeNode: () => void;

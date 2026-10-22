@@ -1,11 +1,11 @@
-import { createMemo, createRoot } from 'solid-js';
-import { getFunction } from './functions/registry';
+import { batch, createMemo, createRoot } from 'solid-js';
+import { getFunction, getSideEffect } from './functions/registry';
 import { NodeReconciler, ParameterDefinition } from './functions/Node2NodeFunc';
 import { NodeStore } from './state/NodeStore';
 import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode } from './state/Node';
 import { scalar } from './jax';
 import { leaves, listItemType, listShape, sha256 } from './tensors/tensor';
-import { broadcastShapes, isBroadcast } from './tensors/broadcast';
+import { broadcastItems, broadcastShapes, isBroadcast } from './tensors/broadcast';
 
 /** One argument of a Python call: a number, a string, a handle to an existing node, or a nested list of these. */
 export type Arg = number | string | { id: string } | Arg[];
@@ -91,7 +91,7 @@ export function checkOut(keyword: string, out: unknown, args: Arg[]) {
 
 /** `out` is the id for the output node. Without it the id is generated. */
 export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string): Promise<ExecuteResult> {
-  const func = getFunction(keyword);
+  const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
   }
@@ -125,6 +125,14 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   checkOut(keyword, out, args);
 
   const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
+
+  if ('run' in func) {
+    const inputs = inputNodeIds.map(id => store.getNodeValue(id)!);
+    batch(() => {
+      for (const itemInputs of broadcastItems(func.parameters, inputs)) func.run(itemInputs, store);
+    });
+    return { id: '', type: 'Dummy' };
+  }
 
   const outputType = broadcastInputShapes.length > 0
     ? 'Array'
