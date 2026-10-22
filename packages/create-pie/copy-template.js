@@ -20,12 +20,16 @@ const ENTRIES = {
   '.nvmrc': '.nvmrc',
   'package.json': 'package.json',
   '.gitignore': '_gitignore',
+  // Named so agents working on this repo don't load it; new sites get it as `AGENTS.md`.
+  'packages/create-pie/site-agents.md': 'AGENTS.md',
 };
 
 fs.rmSync(template, { recursive: true, force: true });
 for (const [from, to] of Object.entries(ENTRIES)) {
   fs.cpSync(path.join(root, from), path.join(template, to), { recursive: true });
 }
+// Claude Code reads `CLAUDE.md`; `@AGENTS.md` loads the guide from there.
+fs.writeFileSync(path.join(template, 'CLAUDE.md'), '@AGENTS.md\n');
 
 // Pin each direct dependency to the exact version installed in the repo, so new sites
 // get the versions this repo was tested with, not whatever is latest that day.
