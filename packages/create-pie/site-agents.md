@@ -17,6 +17,7 @@ npm run preview   # preview the build with vite
 | --- | --- |
 | `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. |
 | `functions/` | Your own TypeScript functions, called from Python as `pie.<keyword>(...)`. |
+| `nodes/` | Your own node types: what a node holds and how it is drawn. |
 | `layouts/` | Optional overrides: `header.tsx` (top of every page) and `index.tsx` (homepage, `/`). |
 | `styles/` | CSS. Every `.css` file here loads after the built-in styles, so it wins. |
 | `public/` | Static files, served as-is. |
@@ -146,6 +147,53 @@ export const Midpoint: Node2NodeFunc = {
 - Node types and their fields are in `src/lib/nodes/state/Node.ts`.
 - A keyword used twice, by two of your files or by yours and a built-in, fails the build.
 
+## Your own node types: `nodes/`
+
+Each `nodes/**/*.{ts,tsx}` file exports one or more `NodeDefinition` objects. Each adds a node type that functions can output and the canvas draws. Copy `nodes/square.tsx` as a starting point:
+
+```tsx
+import type { Accessor } from 'solid-js';
+import type { Node, NodeDefinition, PointNode, ScalarNode } from '~/lib/nodes/state/Node';
+import { num } from '~/lib/nodes/jax';
+
+export interface SquareNode extends Node {
+  type: 'Square';
+  center: PointNode;
+  side: ScalarNode;
+}
+
+// Adds 'Square' to the node types, so functions can take and return it.
+declare module '~/lib/nodes/state/Node' {
+  interface NodeTypeMap {
+    Square: SquareNode;
+  }
+}
+
+const renderSquare = (square: Accessor<SquareNode>) => {
+  const side = () => num(square().side.value);
+  return (
+    <rect
+      x={num(square().center.x) - side() / 2}
+      y={num(square().center.y) - side() / 2}
+      width={side()}
+      height={side()}
+      fill="none" stroke="currentColor" stroke-width={2} vector-effect="non-scaling-stroke"
+    />
+  );
+};
+
+export const Square: NodeDefinition<SquareNode> = { type: 'Square', prefix: 'sq', render: renderSquare };
+```
+
+- `type`: the type name. It must match the interface's `type`.
+- `prefix`: the start of automatic ids: `sq` gives `sq0`, `sq1`, …. Default: the type name in lower case.
+- `render(node, unit)`: returns Solid SVG elements, in grid units. `node()` returns the node's current data. Call it inside the JSX attributes, so the drawing updates when the node changes. `unit` is pixels per grid unit: divide by it for a size that stays fixed on screen. Leave `render` out for a node that isn't drawn.
+- `num(...)` turns a node's number field into a plain JS number.
+- The `declare module` block is needed so that a `Node2NodeFunc` accepts the type in `outputType` and `parameters`.
+- Python makes a node of your type through a function in `functions/`. `functions/square.ts` adds `pie.square(center, side)`.
+- The built-in node types are in `src/lib/nodes/state/Node.ts`, and their render functions are in `src/lib/nodes/render/renderLogic.tsx`.
+- A type name used twice, by two of your files or by yours and a built-in, fails the build.
+
 ## Layouts: `layouts/`
 
 - `layouts/header.tsx`: replaces the header on every page.
@@ -164,6 +212,7 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 - a page's frontmatter or `site.yml` has a bad line or value, or `site.yml` has no `title`
 - a page's URL matches a route in `src/routes/`
 - a `functions/` keyword is used twice
+- a `nodes/` type name is used twice
 - a `layouts/` file has no default export
 
 Run `npm run build` after a change to confirm it.

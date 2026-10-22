@@ -27,6 +27,16 @@ One can define their own `Node2NodeFunc` under `/functions` folder. It will auto
 
 ---
 
+### Extending nodes
+One can define their own node types under `/nodes` folder. Each file exports one or more `NodeDefinition` objects with three props:
+- `type`: the node's type name, eg `Square`.
+- `prefix`: the start of auto-generated IDs, eg `sq` gives `sq0`, `sq1`, ...
+- `render`: a function that draws the node on the canvas. Skip it for a node that is not drawn.
+
+Eg `/nodes/square.tsx` defines a `Square` node. Its `declare module` block adds `Square` to the node types, so a function can output it. `/functions/square.ts` implements it, so a user can type `pie.square(p, 2)` to draw a square of side `2` centered at point `p`.
+
+---
+
 ## Calling in-built Python functions
 One can also lift a regular Python function to become a `Node2NodeFunc`-like function which accepts nodes as inputs and returns nodes as outputs using `pie.lift`. `pie.lift` takes two arguments:
 1. the function to lift, `f`

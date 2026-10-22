@@ -1,4 +1,16 @@
+import type { Accessor, JSXElement } from 'solid-js';
 import type { Dtype } from '../jax';
+import {
+  renderPoint,
+  renderLine,
+  renderTriangle,
+  renderCircle,
+  renderEllipse,
+  renderArc,
+  renderBezierQuadratic,
+  renderBezierCubic,
+  renderPointGrad,
+} from '../render/renderLogic';
 
 export interface Node {
   id: string;
@@ -12,38 +24,52 @@ export interface Node {
   };
 }
 
+export interface NodeDefinition<N extends Node = AnyNode> {
+  type: N['type'];
+  /** Start of generated ids: 'p' gives p0, p1, …. Default: `type` in lower case. */
+  prefix?: string;
+  /** Draws the node, in grid units. `unit` is pixels per grid unit. Without it the node is not drawn. */
+  render?(node: Accessor<N>, unit: Accessor<number>): JSXElement | null;
+}
+
 export interface TextNode extends Node {
   type: 'Text';
   value: string;
 }
+const TextDefinition: NodeDefinition<TextNode> = { type: 'Text', prefix: 'text' };
 
 export interface PointNode extends Node {
   type: 'Point';
   x: Dtype;
   y: Dtype;
 }
+const PointDefinition: NodeDefinition<PointNode> = { type: 'Point', prefix: 'p', render: renderPoint };
 
 export interface ScalarNode extends Node {
   type: 'Scalar';
   value: Dtype;
 }
+const ScalarDefinition: NodeDefinition<ScalarNode> = { type: 'Scalar', prefix: 'num' };
 
 export interface TriangleNode extends Node {
   type: 'Triangle';
   vertices: PointNode[];
 }
+const TriangleDefinition: NodeDefinition<TriangleNode> = { type: 'Triangle', prefix: 'tr', render: renderTriangle };
 
 export interface LineNode extends Node {
   type: 'Line';
   p1: PointNode;
   p2: PointNode;
 }
+const LineDefinition: NodeDefinition<LineNode> = { type: 'Line', prefix: 'line', render: renderLine };
 
 export interface CircleNode extends Node {
   type: 'Circle';
   center: PointNode;
   radius: ScalarNode;
 }
+const CircleDefinition: NodeDefinition<CircleNode> = { type: 'Circle', prefix: 'circ', render: renderCircle };
 
 export interface EllipseNode extends Node {
   type: 'Ellipse';
@@ -52,6 +78,7 @@ export interface EllipseNode extends Node {
   radiusY: ScalarNode;
   rotation: ScalarNode;
 }
+const EllipseDefinition: NodeDefinition<EllipseNode> = { type: 'Ellipse', prefix: 'ell', render: renderEllipse };
 
 export interface BezierQuadraticNode extends Node {
   type: 'BezierQuadratic';
@@ -59,6 +86,7 @@ export interface BezierQuadraticNode extends Node {
   control: PointNode;
   p2: PointNode;
 }
+const BezierQuadraticDefinition: NodeDefinition<BezierQuadraticNode> = { type: 'BezierQuadratic', prefix: 'bq', render: renderBezierQuadratic };
 
 export interface BezierCubicNode extends Node {
   type: 'BezierCubic';
@@ -67,6 +95,7 @@ export interface BezierCubicNode extends Node {
   control2: PointNode;
   p2: PointNode;
 }
+const BezierCubicDefinition: NodeDefinition<BezierCubicNode> = { type: 'BezierCubic', prefix: 'bc', render: renderBezierCubic };
 
 export interface ArcNode extends Node {
   type: 'Arc';
@@ -75,6 +104,7 @@ export interface ArcNode extends Node {
   startAngle: ScalarNode;
   endAngle: ScalarNode;
 }
+const ArcDefinition: NodeDefinition<ArcNode> = { type: 'Arc', prefix: 'arc', render: renderArc };
 
 /** d target / d point, drawn as an arrow (dx, dy) starting at `point`. */
 export interface PointGradNode extends Node {
@@ -84,6 +114,7 @@ export interface PointGradNode extends Node {
   dx: Dtype;
   dy: Dtype;
 }
+const PointGradDefinition: NodeDefinition<PointGradNode> = { type: 'PointGrad', prefix: 'pointgrad', render: renderPointGrad };
 
 /** `items` in row-major order: shape [2, 3] holds row 0's three items, then row 1's. */
 export interface ArrayNode extends Node {
@@ -92,10 +123,13 @@ export interface ArrayNode extends Node {
   shape: number[];
   items: AnyNode[];
 }
+const ArrayDefinition: NodeDefinition<ArrayNode> = { type: 'Array', prefix: 'arr' };
 
 export interface DummyNode extends Node {
   type: 'Dummy';
 }
+/** An empty prefix gives an empty id. */
+const DummyDefinition: NodeDefinition<DummyNode> = { type: 'Dummy', prefix: '' };
 
 export interface NodeTypeMap {
   Text: TextNode;
@@ -115,3 +149,36 @@ export interface NodeTypeMap {
 
 export type AnyNode = NodeTypeMap[keyof NodeTypeMap];
 export type NodeType = keyof NodeTypeMap;
+
+const isNodeDefinition = (def: unknown): def is NodeDefinition =>
+  typeof def === 'object' && def !== null && typeof (def as NodeDefinition).type === 'string';
+
+// The site's own node types: each `nodes/**/*.{ts,tsx}` exports `NodeDefinition`s, like `nodes/square.tsx`.
+const customModules = import.meta.glob<Record<string, unknown>>('/nodes/**/*.{ts,tsx}', { eager: true });
+
+// File path -> its definitions. Built-ins first.
+const definitionsByFile: [string, unknown[]][] = [
+  ['src/lib/nodes/state/Node.ts', [
+    TextDefinition, PointDefinition, ScalarDefinition, TriangleDefinition, LineDefinition, CircleDefinition,
+    EllipseDefinition, BezierQuadraticDefinition, BezierCubicDefinition, ArcDefinition, PointGradDefinition,
+    ArrayDefinition, DummyDefinition,
+  ]],
+  ...Object.entries(customModules).map(([path, mod]): [string, unknown[]] => [path.slice(1), Object.values(mod)]),
+];
+
+const nodeDefinitions = new Map<string, NodeDefinition>();
+const sourceFile = new Map<string, string>();
+for (const [file, defs] of definitionsByFile) {
+  for (const def of defs.filter(isNodeDefinition)) {
+    const other = sourceFile.get(def.type);
+    if (other !== undefined) {
+      throw new Error(`Duplicate node type '${def.type}': ${file} and ${other}`);
+    }
+    nodeDefinitions.set(def.type, def);
+    sourceFile.set(def.type, file);
+  }
+}
+
+export function getNodeDefinition(type: string): NodeDefinition | undefined {
+  return nodeDefinitions.get(type);
+}

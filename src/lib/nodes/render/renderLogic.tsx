@@ -1,6 +1,6 @@
-import { PointNode, LineNode, TriangleNode, CircleNode, EllipseNode, ArcNode, BezierQuadraticNode, BezierCubicNode, PointGradNode, AnyNode, NodeType, NodeTypeMap } from "../state/Node";
+import type { PointNode, LineNode, TriangleNode, CircleNode, EllipseNode, ArcNode, BezierQuadraticNode, BezierCubicNode, PointGradNode } from "../state/Node";
 import { num } from "../jax";
-import { Accessor, JSXElement, Show } from "solid-js";
+import { Accessor, Show } from "solid-js";
 
 // Sizes are in pixels. Strokes use `non-scaling-stroke` so their width ignores zoom;
 // the point radius is divided by `unit` (pixels per grid unit) instead.
@@ -11,17 +11,13 @@ const ARROW_HEAD = 10;
 
 // Each render function runs once per element. It reads the node accessor inside
 // the attributes, so a node change updates those attributes in place.
-const renderPoint = (node: Accessor<AnyNode>, unit: Accessor<number>) => {
-    const point = node as Accessor<PointNode>
-
+const renderPoint = (point: Accessor<PointNode>, unit: Accessor<number>) => {
     return (
         <circle cx={num(point().x)} cy={num(point().y)} r={POINT_RADIUS / unit()} fill={COLOR} />
     );
 }
 
-const renderLine = (node: Accessor<AnyNode>) => {
-    const line = node as Accessor<LineNode>
-
+const renderLine = (line: Accessor<LineNode>) => {
     return (
         <Show when={line().p1 && line().p2}>
             <line x1={num(line().p1.x)} y1={num(line().p1.y)} x2={num(line().p2.x)} y2={num(line().p2.y)} stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
@@ -29,9 +25,7 @@ const renderLine = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderTriangle = (node: Accessor<AnyNode>) => {
-    const triangle = node as Accessor<TriangleNode>;
-
+const renderTriangle = (triangle: Accessor<TriangleNode>) => {
     const pointsStr = () => {
         const [p1, p2, p3] = triangle().vertices;
         return `${num(p1.x)},${num(p1.y)} ${num(p2.x)},${num(p2.y)} ${num(p3.x)},${num(p3.y)}`;
@@ -44,9 +38,7 @@ const renderTriangle = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderCircle = (node: Accessor<AnyNode>) => {
-    const circle = node as Accessor<CircleNode>;
-
+const renderCircle = (circle: Accessor<CircleNode>) => {
     return (
         <Show when={circle().center}>
             <circle cx={num(circle().center.x)} cy={num(circle().center.y)} r={num(circle().radius.value)} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
@@ -54,9 +46,7 @@ const renderCircle = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderEllipse = (node: Accessor<AnyNode>) => {
-    const ellipse = node as Accessor<EllipseNode>;
-
+const renderEllipse = (ellipse: Accessor<EllipseNode>) => {
     const cx = () => num(ellipse().center.x);
     const cy = () => num(ellipse().center.y);
     const rx = () => num(ellipse().radiusX.value);
@@ -70,9 +60,7 @@ const renderEllipse = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderArc = (node: Accessor<AnyNode>) => {
-    const arc = node as Accessor<ArcNode>;
-
+const renderArc = (arc: Accessor<ArcNode>) => {
     const pathData = () => {
         const center = arc().center;
         const startAngleRad = (num(arc().startAngle.value) * Math.PI) / 180;
@@ -97,9 +85,7 @@ const renderArc = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderBezierQuadratic = (node: Accessor<AnyNode>) => {
-    const bezier = node as Accessor<BezierQuadraticNode>;
-
+const renderBezierQuadratic = (bezier: Accessor<BezierQuadraticNode>) => {
     const pathData = () => {
         const { p1, control, p2 } = bezier();
         return `M ${num(p1.x)},${num(p1.y)} Q ${num(control.x)},${num(control.y)} ${num(p2.x)},${num(p2.y)}`;
@@ -112,9 +98,7 @@ const renderBezierQuadratic = (node: Accessor<AnyNode>) => {
     );
 }
 
-const renderBezierCubic = (node: Accessor<AnyNode>) => {
-    const bezier = node as Accessor<BezierCubicNode>;
-
+const renderBezierCubic = (bezier: Accessor<BezierCubicNode>) => {
     const pathData = () => {
         const { p1, control1, control2, p2 } = bezier();
         return `M ${num(p1.x)},${num(p1.y)} C ${num(control1.x)},${num(control1.y)} ${num(control2.x)},${num(control2.y)} ${num(p2.x)},${num(p2.y)}`;
@@ -128,9 +112,7 @@ const renderBezierCubic = (node: Accessor<AnyNode>) => {
 }
 
 // Draws (dx, dy) in grid units, starting at the point. No arrow when it is zero or NaN.
-const renderPointGrad = (node: Accessor<AnyNode>, unit: Accessor<number>) => {
-    const grad = node as Accessor<PointGradNode>;
-
+const renderPointGrad = (grad: Accessor<PointGradNode>, unit: Accessor<number>) => {
     const arrow = () => {
         const g = grad();
         const x = num(g.point.x), y = num(g.point.y), dx = num(g.dx), dy = num(g.dy);
@@ -160,19 +142,14 @@ const renderPointGrad = (node: Accessor<AnyNode>, unit: Accessor<number>) => {
     );
 }
 
-const renderMap: Partial<Record<keyof NodeTypeMap, (node: Accessor<AnyNode>, unit: Accessor<number>) => JSXElement | null>> = {
-    Point: renderPoint,
-    Line: renderLine,
-    Triangle: renderTriangle,
-    Circle: renderCircle,
-    Ellipse: renderEllipse,
-    Arc: renderArc,
-    BezierQuadratic: renderBezierQuadratic,
-    BezierCubic: renderBezierCubic,
-    PointGrad: renderPointGrad,
-};
-
-export const renderNode = (type: NodeType, node: Accessor<AnyNode>, unit: Accessor<number>): JSXElement | null => {
-    const fn = renderMap[type];
-    return fn ? fn(node, unit) : null;
+export {
+    renderPoint,
+    renderLine,
+    renderTriangle,
+    renderCircle,
+    renderEllipse,
+    renderArc,
+    renderBezierQuadratic,
+    renderBezierCubic,
+    renderPointGrad,
 };
