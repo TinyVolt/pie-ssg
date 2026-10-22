@@ -2,8 +2,9 @@ import path from 'node:path';
 import { runnerImport, type Plugin } from 'vite';
 
 /**
- * Loads `registry.ts` once at build start, so a bad `functions/**\/*.ts` (e.g. a keyword
- * used twice) fails the build. Without this, the error only stops pages from prerendering.
+ * Loads `registry.ts` and `state/Node.ts` once at build start, so a bad `functions/**\/*.ts`
+ * (e.g. a keyword used twice) or `nodes/**\/*.{ts,tsx}` (e.g. a type used twice) fails the build.
+ * Without this, the error only stops pages from prerendering.
  */
 export function checkFunctions(): Plugin {
   let root = '';
@@ -20,12 +21,16 @@ export function checkFunctions(): Plugin {
       if (checked) return;
       checked = true;
       try {
-        await runnerImport(path.join(root, 'src/lib/nodes/functions/registry.ts'), {
-          configFile: false,
+        const options = {
+          configFile: false as const,
           root,
-          logLevel: 'silent',
+          logLevel: 'silent' as const,
           resolve: { alias: { '~': path.join(root, 'src') } },
-        });
+          // Render functions use JSX. They never run here, so any JSX runtime that loads will do.
+          oxc: { jsx: { runtime: 'automatic' as const, importSource: 'solid-js/h' } },
+        };
+        await runnerImport(path.join(root, 'src/lib/nodes/functions/registry.ts'), options);
+        await runnerImport(path.join(root, 'src/lib/nodes/state/Node.ts'), options);
       } catch (e) {
         this.error((e as Error).message);
       }

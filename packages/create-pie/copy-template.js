@@ -11,6 +11,7 @@ const ENTRIES = {
   'src': 'src',
   'pages': 'pages',
   'functions': 'functions',
+  'nodes': 'nodes',
   'styles': 'styles',
   'layouts': 'layouts',
   'public': 'public',

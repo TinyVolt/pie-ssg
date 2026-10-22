@@ -1,6 +1,6 @@
 import { For, createMemo, JSX } from 'solid-js';
 import { NodeStore, type NodeSignal } from '../state/NodeStore';
-import { renderNode } from '../render/renderLogic';
+import { getNodeDefinition } from '../state/Node';
 import { CenteredGrid } from './CenteredGrid';
 import { useCanvasResize } from '../hooks/useCanvasResize';
 
@@ -36,7 +36,7 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     const type = createMemo(() => node()?.type);
     return (
       <g data-node-id={node()?.id}>
-        {type() && renderNode(type()!, node, props.store.unit)}
+        {type() && (getNodeDefinition(type()!)?.render?.(node, props.store.unit) ?? null)}
       </g>
     );
   };

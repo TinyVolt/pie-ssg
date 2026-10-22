@@ -1,26 +1,7 @@
-import { NodeType } from './Node';
-
-export const NAMING_PREFIXES: Record<NodeType, string> = {
-  Text: 'text',
-  Point: 'p',
-  Scalar: 'num',
-  Line: 'line',
-  Triangle: 'tr',
-  Circle: 'circ',
-  Ellipse: 'ell',
-  BezierQuadratic: 'bq',
-  BezierCubic: 'bc',
-  Arc: 'arc',
-  PointGrad: 'pointgrad',
-  Array: 'arr',
-  Dummy: '',
-};
+import { NodeType, getNodeDefinition } from './Node';
 
 export function getPrefixForType(type: NodeType | string): string {
-  if (type in NAMING_PREFIXES) {
-    return NAMING_PREFIXES[type as NodeType];
-  }
-  return type.toLowerCase();
+  return getNodeDefinition(type)?.prefix ?? type.toLowerCase();
 }
 
 export class NameGenerator {
