@@ -47,6 +47,27 @@ function sourceIndex(shape: number[], index: number[]): number {
 }
 
 /**
+ * The inputs of each item when an input is broadcast (see `isBroadcast`), or just `inputs`
+ * when none is. Like `computeBlueprint`, an item with a Dummy input is skipped.
+ */
+export function broadcastItems(parameters: ParameterDefinition[], inputs: AnyNode[]): AnyNode[][] {
+  const broadcasts = inputs.map((node, i) => isBroadcast(node.type, parameters[i]));
+  if (!broadcasts.includes(true)) return [inputs];
+
+  const shapes = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).shape : []);
+  const shape = broadcastShapes(shapes);
+  const size = shape.reduce((a, b) => a * b, 1);
+
+  const items: AnyNode[][] = [];
+  for (let k = 0; k < size; k++) {
+    const index = unravel(k, shape);
+    const itemInputs = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).items[sourceIndex(shapes[i], index)] : node);
+    if (!itemInputs.some(node => node.type === 'Dummy')) items.push(itemInputs);
+  }
+  return items;
+}
+
+/**
  * `func.compute`, run once per item when an input is broadcast (see `isBroadcast`).
  * Item k's nodes are saved under keys `k.main`, `k.l_0`, ..., and `main` is the array of
  * every item's main node. An item is Dummy, and not saved, when one of its inputs is
