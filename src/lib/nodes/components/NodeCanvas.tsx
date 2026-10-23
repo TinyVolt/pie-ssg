@@ -36,6 +36,8 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     const type = createMemo(() => node()?.type);
     return (
       <g data-node-id={node()?.id}>
+        {/* The browser shows the `<title>` as a tooltip when hovering any shape in the group. */}
+        <title>{node()?.id}</title>
         {type() && (getNodeDefinition(type()!)?.render?.(node, props.store.unit) ?? null)}
       </g>
     );
