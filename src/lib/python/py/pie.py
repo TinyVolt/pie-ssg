@@ -161,11 +161,14 @@ def _evaluate(scope, call, values):
         fn = scope[target]
     else:
         fn = target
-    # A Scalar's value arrives as a number, a Point's as [x, y].
+    # A Scalar's value arrives as a number, a Point's as [x, y], an Array's as {shape, values}.
     def fill(a):
         if not isinstance(a, _Slot):
             return a
         v = values[a.index]
+        if isinstance(v, dict):
+            import numpy as np
+            return np.array(v["values"]).reshape(v["shape"])
         return tuple(float(c) for c in v) if isinstance(v, list) else float(v)
     _lift_depth += 1
     try:

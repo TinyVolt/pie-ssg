@@ -9,8 +9,8 @@ import { num, scalar } from '~/lib/nodes/jax';
 type Kind = 'Scalar' | 'Point' | 'Array';
 type ItemType = 'Scalar' | 'Point';
 
-/** An input node's value as Python gets it: a Scalar's number, or a Point's [x, y]. */
-export type InputValue = number | [number, number];
+/** An input node's value as Python gets it: a Scalar's number, a Point's [x, y], or an Array's numbers in row-major order. */
+export type InputValue = number | [number, number] | PyResult;
 
 /** A result from Python. `values`: every number in row-major order, a Point as x, y. A Scalar or Point has shape []. */
 export interface PyResult {
@@ -36,7 +36,11 @@ function inputValue(node: AnyNode | undefined, id: string): InputValue {
   if (!node) throw new Error(`Unknown node '${id}'`);
   if (node.type === 'Scalar') return num(node.value);
   if (node.type === 'Point') return [num(node.x), num(node.y)];
-  throw new Error(`'${id}' is a ${node.type}; only Scalar and Point nodes can be inputs`);
+  if (node.type === 'Array') {
+    const values = node.items.flatMap(item => inputValue(item, item.id)) as number[];
+    return { shape: node.itemType === 'Point' ? [...node.shape, 2] : node.shape, values };
+  }
+  throw new Error(`'${id}' is a ${node.type}; only Scalar and Point nodes and Arrays of them can be inputs`);
 }
 
 /** First half of `g(a)`: checks the inputs, `out`, `fill` and `stroke`, and reserves the output id. Python then calls `f` with `values`. */
@@ -76,7 +80,7 @@ export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
   const func: Node2NodeFunc = {
     keyword: `${PYTHON_KEYWORD_PREFIX}${name}`,
     outputType: kind,
-    // 'Array' too, so `computeBlueprint` passes an Array input whole, for `inputValue` to reject, instead of looping over it.
+    // 'Array' too, so `computeBlueprint` passes an Array input whole instead of looping over it.
     parameters: inputIds.map((_, i) => ({ name: `input${i}`, type: ['Scalar', 'Point', 'Array'] })),
     broadcastable: false,
     compute(inputs) {
