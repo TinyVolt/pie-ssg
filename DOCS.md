@@ -31,6 +31,9 @@ Every node a call makes gets the colors, including extra nodes such as the cente
 
 To change the colors later, use `pie.set_fill(node, color)` and `pie.set_stroke(node, color)`. `node` can be an array, in which case every item changes.
 
+### Removing
+Use `pie.remove(node)` to remove a node. Nodes built from it are removed too. If a list of nodes is passed, it removes each item in that list.
+
 ### Animation
 `pie.translate_point_to`, `pie.translate_point_by`, `pie.translate_scalar_to` and `pie.translate_scalar_by` take `animate=True`. The value then moves to its new value over half a second instead of jumping. Eg `pie.translate_point_to(p, 3, 4, animate=True)`. The call returns when the move ends, so a loop of animated calls plays one after another. If `p` is an array, its items move together. Other functions raise an error if passed `animate`.
 

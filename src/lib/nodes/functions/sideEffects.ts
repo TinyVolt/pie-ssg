@@ -73,6 +73,18 @@ export const Show: SideEffectFunc = {
 };
 
 /**
+ * Remove a node from the canvas.
+ * @param node - Node to remove
+ */
+export const Remove: SideEffectFunc = {
+  keyword: 'remove',
+  parameters: [{ name: 'node', type: anyItem }],
+  run(inputs, store) {
+    store.removeNode(inputs[0].id);
+  },
+};
+
+/**
  * Set a node's fill.
  * @param node - Node to change
  * @param color - A CSS color, like 'red' or '#ff0000', or 'none'

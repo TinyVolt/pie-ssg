@@ -125,6 +125,9 @@ These change existing nodes instead of making a new one. They run once, when cal
 | `pie.translate_scalar_by(s, delta)` | adds `delta` to scalar `s` |
 | `pie.set_fill(node, color)` | sets `node`'s fill |
 | `pie.set_stroke(node, color)` | sets `node`'s stroke |
+| `pie.hide(node)` | stops drawing `node` |
+| `pie.show(node)` | draws a hidden `node` again |
+| `pie.remove(node)` | removes `node`; nodes built from it are removed too |
 
 - `p`, `s` or `node` can be an array: every item changes.
 - A moved node stops following the nodes it was built from. Nodes built from it follow the move. A moved point keeps its colors.
