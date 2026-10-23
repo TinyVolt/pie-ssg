@@ -53,7 +53,7 @@ Other keys are ignored. A bad value fails the build, and shows an error screen i
 
 Math uses KaTeX: `$…$` inline, and `$$…$$` on its own lines for a display block.
 
-A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
+A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/pages`). For example, `pages/pages.md` fails the build.
 
 ## Python editors
 

@@ -55,3 +55,15 @@ pnpm build     # build to .output/
 pnpm start     # run the built server
 pnpm preview   # preview the build with vite
 ```
+
+## Publishing
+
+Bump `version` in `package.json`, then at the repo root:
+
+```sh
+npm whoami
+npm login # if npm whoami fails
+npm publish --dry-run   # list the files without publishing
+npm publish
+git tag pie@<version> && git push origin pie@<version>
+```
