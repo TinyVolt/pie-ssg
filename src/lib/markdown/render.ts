@@ -1,8 +1,31 @@
 import katex from 'katex';
 import { Marked, Renderer } from 'marked';
+import { pythonLanguage } from '@codemirror/lang-python';
+import { classHighlighter, highlightCode } from '@lezer/highlight';
 
 function renderMath(formula: string, displayMode: boolean): string {
   return katex.renderToString(formula, { displayMode, throwOnError: false });
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/** Python as HTML, with `tok-*` classes on each token. app.css colors them like the editor. */
+function highlightPython(code: string): string {
+  let html = '';
+  highlightCode(
+    code,
+    pythonLanguage.parser.parse(code),
+    classHighlighter,
+    (text, classes) => {
+      html += classes ? `<span class="${classes}">${escapeHtml(text)}</span>` : escapeHtml(text);
+    },
+    () => {
+      html += '\n';
+    },
+  );
+  return html;
 }
 
 const marked = new Marked({
@@ -49,8 +72,13 @@ const marked = new Marked({
   ],
   renderer: {
     // ```python-editor collapsed: marked keeps only the first word, so mark the block for the editor here.
+    // ```python: color each token here, at build time.
     code(token) {
       const [lang, ...flags] = (token.lang ?? '').split(/\s+/);
+      if (lang === 'python') {
+        const code = token.text.replace(/\n$/, '') + '\n';
+        return `<pre><code class="language-python">${highlightPython(code)}</code></pre>\n`;
+      }
       if (lang !== 'python-editor' || !flags.includes('collapsed')) return false;
       return new Renderer().code(token).replace('<code ', '<code data-collapsed ');
     },
