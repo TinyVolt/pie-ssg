@@ -28,6 +28,8 @@ const FIELDS = {
   canvas: oneOf(['left', 'right', 'top', 'bottom', 'none'], 'none'),
   // Empty: the tab shows the site title alone.
   title: text(''),
+  // Empty: `site.yml`'s `description`.
+  description: text(''),
 };
 
 export type Frontmatter = Values<typeof FIELDS>;

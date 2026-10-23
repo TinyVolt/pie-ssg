@@ -88,6 +88,13 @@ The root folder `/layouts` provides `index.tsx` and `header.tsx` to customize th
 
 ---
 
+## SEO
+Set `url` in `site.yml` (eg `url: https://example.com`) before deploying. The build then writes `sitemap.xml` (every page) and `robots.txt` (pointing to the sitemap), and every page gets a canonical link and `og:url`. Without `url`, the build skips these and warns. A file of the same name in `/public` replaces the generated one.
+
+Every page also gets `og:title`, `og:site_name` and, if set, a description: the page's frontmatter `description`, or else `site.yml`'s `description`.
+
+---
+
 ## Examples
 
 Coming soon. 

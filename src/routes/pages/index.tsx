@@ -1,11 +1,11 @@
 import { For } from 'solid-js';
-import { PageTitle } from '~/components/PageTitle';
+import { PageMeta } from '~/components/PageMeta';
 import { slugs } from '~/lib/markdown/pages';
 
 export default function Pages() {
   return (
     <main>
-      <PageTitle>Pages</PageTitle>
+      <PageMeta title="Pages" />
       <ul>
         <For each={slugs}>
           {slug => (

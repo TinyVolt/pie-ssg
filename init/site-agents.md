@@ -32,6 +32,8 @@ Do the work in the folders above. Don't edit `node_modules/@tinyvolt/pie/`: inst
 Flat `key: value` lines. Values may be quoted. A key may appear only once.
 
 - `title` (required): shown in the header and in every browser tab title.
+- `url`: where the site is deployed, e.g. `https://example.com`. Needed for `sitemap.xml`, `robots.txt`, canonical links and `og:url`; without it the build skips them and warns.
+- `description`: shown in search results and link previews for a page with no `description` of its own.
 
 ## Pages
 
@@ -47,6 +49,7 @@ canvas: left
 ```
 
 - `title`: the tab title. Empty means the tab shows the site title alone.
+- `description`: shown in search results and link previews. Empty means `site.yml`'s `description`.
 - `canvas`: `left`, `right`, `top`, `bottom` or `none` (default). Adds a canvas on that side of the page.
 
 Other keys are ignored. A bad value fails the build, and shows an error screen in dev.

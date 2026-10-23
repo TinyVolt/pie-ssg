@@ -2,6 +2,7 @@ import { createAsync, useParams } from '@solidjs/router';
 import { HttpStatusCode } from '@solidjs/start';
 import { Match, Switch } from 'solid-js';
 import 'katex/dist/katex.min.css';
+import { PageMeta } from '~/components/PageMeta';
 import { PageTitle } from '~/components/PageTitle';
 import { CanvasPage } from '~/lib/markdown/components/CanvasPage';
 import { MarkdownBody } from '~/lib/markdown/components/MarkdownBody';
@@ -27,7 +28,7 @@ export default function Page() {
           const canvas = page.frontmatter.canvas;
           return (
             <>
-              <PageTitle>{page.frontmatter.title}</PageTitle>
+              <PageMeta title={page.frontmatter.title} description={page.frontmatter.description} />
               {canvas === 'none' ? <MarkdownBody html={page.html} /> : <CanvasPage side={canvas} html={page.html} />}
             </>
           );
