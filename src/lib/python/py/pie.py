@@ -75,10 +75,12 @@ def _arg(a):
         return [_arg(x) for x in a]
     return a
 
-def _call(name, args, out=None, hidden=None, fill=None, stroke=None):
+def _call(name, args, **options):
+    """`options`: keyword arguments like `out` and `fill`. Ones that are None are left out."""
     _check_bridge()
     js_args = to_js([_arg(a) for a in args], dict_converter=Object.fromEntries)
-    return _node(run_sync(bridge.call(name, js_args, out, hidden, fill, stroke)))
+    js_options = to_js({k: v for k, v in options.items() if v is not None}, dict_converter=Object.fromEntries)
+    return _node(run_sync(bridge.call(name, js_args, js_options)))
 
 # Above 0 while a function passed to `pie.lift` runs. It can't reach the page: a rerun runs outside any block.
 _lift_depth = 0
@@ -209,6 +211,6 @@ def _check_out_type_and_flatten(name, returns, result):
 def __getattr__(name):
     if name.startswith("_"):
         raise AttributeError(name)
-    def fn(*args, out=None, hidden=None, fill=None, stroke=None):
-        return _call(name, args, out, hidden, fill, stroke)
+    def fn(*args, out=None, hidden=None, fill=None, stroke=None, animate=None):
+        return _call(name, args, out=out, hidden=hidden, fill=fill, stroke=stroke, animate=animate)
     return fn

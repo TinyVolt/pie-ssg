@@ -89,8 +89,18 @@ export function checkOut(keyword: string, out: unknown, args: Arg[]) {
   }
 }
 
-/** `out` is the id for the output node. Without it the id is generated. */
-export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string, hidden?: boolean, fill?: string, stroke?: string): Promise<ExecuteResult> {
+/** The keyword arguments of a Python call. */
+export interface CallOptions {
+  /** The id for the output node. Without it the id is generated. */
+  out?: string;
+  hidden?: boolean;
+  fill?: string;
+  stroke?: string;
+  /** Only for `animatable` side effects: numbers move to their new values instead of jumping. */
+  animate?: boolean;
+}
+
+export async function execute(store: NodeStore, keyword: string, args: Arg[], { out, hidden, fill, stroke, animate }: CallOptions = {}): Promise<ExecuteResult> {
   const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
@@ -126,6 +136,7 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   if ('run' in func && hidden !== undefined) throw new Error(`${keyword} does not take hidden`);
   if ('run' in func && fill !== undefined) throw new Error(`${keyword} does not take fill`);
   if ('run' in func && stroke !== undefined) throw new Error(`${keyword} does not take stroke`);
+  if (animate !== undefined && !('run' in func && func.animatable)) throw new Error(`${keyword} does not take animate`);
   checkColor(keyword, 'fill', fill);
   checkColor(keyword, 'stroke', stroke);
 
@@ -133,9 +144,8 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
 
   if ('run' in func) {
     const inputs = inputNodeIds.map(id => store.getNodeValue(id)!);
-    batch(() => {
-      for (const itemInputs of broadcastItems(func.parameters, inputs)) func.run(itemInputs, store);
-    });
+    const runs = batch(() => broadcastItems(func.parameters, inputs).map(itemInputs => func.run(itemInputs, store, animate ?? false)));
+    await Promise.all(runs);
     return { id: '', type: 'Dummy' };
   }
 

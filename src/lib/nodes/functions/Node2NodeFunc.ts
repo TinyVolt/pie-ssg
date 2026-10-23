@@ -37,7 +37,10 @@ export interface SideEffectFunc {
   parameters: ParameterDefinition[];
   /** False: passing an array is an error instead of a loop over its items. Default true. */
   broadcastable?: boolean;
-  run: (inputs: AnyNode[], store: NodeStore) => void;
+  /** True: takes `animate`. Default false. */
+  animatable?: boolean;
+  /** The call waits for the returned promise, e.g. until an animation ends. */
+  run: (inputs: AnyNode[], store: NodeStore, animate: boolean) => void | Promise<void>;
 }
 
 type LocalMeta = {

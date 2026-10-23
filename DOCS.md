@@ -31,6 +31,9 @@ Every node a call makes gets the colors, including extra nodes such as the cente
 
 To change the colors later, use `pie.set_fill(node, color)` and `pie.set_stroke(node, color)`. `node` can be an array, in which case every item changes.
 
+### Animation
+`pie.translate_point_to`, `pie.translate_point_by`, `pie.translate_scalar_to` and `pie.translate_scalar_by` take `animate=True`. The value then moves to its new value over half a second instead of jumping. Eg `pie.translate_point_to(p, 3, 4, animate=True)`. The call returns when the move ends, so a loop of animated calls plays one after another. If `p` is an array, its items move together. Other functions raise an error if passed `animate`.
+
 ### Extending JS functions
 One can define their own `Node2NodeFunc` under `/functions` folder. It will automatically become available under `pie.*` in Python. Eg `/functions/midpoint.ts` implements `Midpoint` with keyword `midpoint`. In a Python editor, a user can type `pie.midpoint(p1, p2)` to draw a mid-point of points `p1` and `p2`. 
 

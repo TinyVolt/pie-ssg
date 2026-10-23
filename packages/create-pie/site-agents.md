@@ -128,6 +128,7 @@ These change existing nodes instead of making a new one. They run once, when cal
 
 - `p`, `s` or `node` can be an array: every item changes.
 - A moved node stops following the nodes it was built from. Nodes built from it follow the move. A moved point keeps its colors.
+- The four `translate_*` calls take `animate=True`: the value moves to its new value over half a second instead of jumping. The call returns when the move ends, so a loop of animated calls plays one after another. An array's items move together. Other calls raise an error if passed `animate`.
 
 ### Lifting a Python function: `pie.lift`
 

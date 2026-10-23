@@ -1,6 +1,7 @@
 import PIE_PY from './py/pie.py?raw';
 import PIE_MPL_PY from './py/pie_mpl.py?raw';
 import SHOW_FIGURES from './py/show_figures.py?raw';
+import type { CallOptions } from '~/lib/nodes/execute';
 
 const BASE = 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/';
 
@@ -15,8 +16,8 @@ const request = (message: object) =>
     postMessage({ ...message, reqId });
   });
 
-const call = (keyword: string, args: unknown[], out?: string, hidden?: boolean, fill?: string, stroke?: string) =>
-  request({ type: 'call', keyword, args, out, hidden, fill, stroke });
+const call = (keyword: string, args: unknown[], options: CallOptions) =>
+  request({ type: 'call', keyword, args, options });
 
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
