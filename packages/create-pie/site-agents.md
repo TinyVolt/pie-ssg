@@ -97,7 +97,7 @@ Built-in functions:
 | Call | Makes |
 | --- | --- |
 | `pie.scalar(value)` | a number |
-| `pie.text(value)` | a string |
+| `pie.text(value, x, y, font_size, w, h)` | a string; drawn centered at (x, y) only if both are given. All optional: `value` `''`, `font_size` 12 (pixels), `w` and `h` 0. `w`/`h`: 0 and 0 = one line, no box; above 0 = fixed size; -1 = fits the text, at most 5 |
 | `pie.point(x, y)` | a point |
 | `pie.line(p1, p2)` | a line |
 | `pie.distance(p1, p2)` | a number |
@@ -135,7 +135,7 @@ These change existing nodes instead of making a new one. They run once, when cal
 
 ### Lifting a Python function: `pie.lift`
 
-`pie.lift(f, out_type)` turns a plain Python function into one that takes nodes and returns a node. It reruns when its input nodes change. `out_type` is one of `pie.Scalar`, `pie.Point`, `pie.Array[pie.Scalar]`, `pie.Array[pie.Point]`.
+`pie.lift(f, out_type)` turns a plain Python function into one that takes nodes and returns a node. It reruns when its input nodes change. `out_type` is one of `pie.Scalar`, `pie.Point`, `pie.Text` (or `str`), `pie.Array[pie.Scalar]`, `pie.Array[pie.Point]`.
 
 ```python
 import numpy as np

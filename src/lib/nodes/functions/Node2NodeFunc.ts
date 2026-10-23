@@ -8,6 +8,11 @@ export interface ParameterDefinition {
   name: string;
   /** A list means any one of these types is accepted. */
   type: NodeType | NodeType[];
+  /**
+   * Makes the parameter optional: a left-out argument takes this value. `null`: a left-out argument
+   * makes no node, and `compute` gets `undefined`. Optional parameters come after the required ones.
+   */
+  defaultValue?: number | string | null;
 }
 
 export type BlueprintNode = any;
@@ -134,8 +139,11 @@ export class NodeReconciler {
     return { hasMissingDependency };
   }
 
-  /** `hidden`, `fill` and `stroke` are set on every node the call makes: the main node and the others in the blueprint. */
-  evaluate(func: Node2NodeFunc, inputNodeIds: string[], store: NodeStore, assignedId?: string, hidden = false, fill?: string, stroke?: string) {
+  /**
+   * `hidden`, `fill` and `stroke` are set on every node the call makes: the main node and the others in the blueprint.
+   * An `undefined` input id is a left-out optional parameter: `compute` gets `undefined` for it.
+   */
+  evaluate(func: Node2NodeFunc, inputNodeIds: (string | undefined)[], store: NodeStore, assignedId?: string, hidden = false, fill?: string, stroke?: string) {
     createRoot((disposeRoot) => {
       const localToGlobal = new Map<string, LocalMeta>();
 
@@ -152,8 +160,8 @@ export class NodeReconciler {
       let blueprintInputs: AnyNode[] = [];
 
       const blueprintMemo = createMemo<Record<string, BlueprintNode> | null>((prev) => {
-        const inputs = inputNodeIds.map(id => store.getNodeValue(id));
-        if (inputs.some(node => !node || node.type === 'Dummy')) return null;
+        const inputs = inputNodeIds.map(id => id === undefined ? undefined : store.getNodeValue(id));
+        if (inputs.some((node, i) => inputNodeIds[i] !== undefined && (!node || node.type === 'Dummy'))) return null;
         try {
           const blueprint = computeBlueprint(func, inputs as AnyNode[]);
           blueprintInputs = inputs as AnyNode[];

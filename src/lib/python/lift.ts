@@ -5,17 +5,17 @@ import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { checkColor, type AnyNode } from '~/lib/nodes/state/Node';
 import { num, scalar } from '~/lib/nodes/jax';
 
-/** The type passed to `pie.lift`: `pie.Scalar`, `pie.Point`, or `pie.Array[...]` of `itemType`. */
-type Kind = 'Scalar' | 'Point' | 'Array';
+/** The type passed to `pie.lift`: `pie.Scalar`, `pie.Point`, `pie.Text`, or `pie.Array[...]` of `itemType`. */
+type Kind = 'Scalar' | 'Point' | 'Text' | 'Array';
 type ItemType = 'Scalar' | 'Point';
 
-/** An input node's value as Python gets it: a Scalar's number, a Point's [x, y], or an Array's numbers in row-major order. */
-export type InputValue = number | [number, number] | PyResult;
+/** An input node's value as Python gets it: a Scalar's number, a Point's [x, y], a Text's string, or an Array's values in row-major order. */
+export type InputValue = number | [number, number] | string | PyResult;
 
-/** A result from Python. `values`: every number in row-major order, a Point as x, y. A Scalar or Point has shape []. */
+/** A result from Python. `values`: every number in row-major order, a Point as x, y; or a Text's string. A Scalar, Point or Text has shape []. */
 export interface PyResult {
   shape: number[];
-  values: number[];
+  values: number[] | [string];
 }
 
 /** Sent by Python once `g(a)`, for `g = pie.lift(f, ...)`, has its first result. */
@@ -36,11 +36,12 @@ function inputValue(node: AnyNode | undefined, id: string): InputValue {
   if (!node) throw new Error(`Unknown node '${id}'`);
   if (node.type === 'Scalar') return num(node.value);
   if (node.type === 'Point') return [num(node.x), num(node.y)];
+  if (node.type === 'Text') return node.value;
   if (node.type === 'Array') {
     const values = node.items.flatMap(item => inputValue(item, item.id)) as number[];
     return { shape: node.itemType === 'Point' ? [...node.shape, 2] : node.shape, values };
   }
-  throw new Error(`'${id}' is a ${node.type}; only Scalar and Point nodes and Arrays of them can be inputs`);
+  throw new Error(`'${id}' is a ${node.type}; only Scalar, Point and Text nodes and Arrays of them can be inputs`);
 }
 
 /** First half of `g(a)`: checks the inputs, `out`, `fill` and `stroke`, and reserves the output id. Python then calls `f` with `values`. */
@@ -54,7 +55,10 @@ export function startLift(store: NodeStore, name: string, inputIds: string[], ki
 }
 
 /** Item k of an Array is saved under key `k`, so a rerun with a new shape keeps, adds or removes items by position. */
-function toBlueprint(kind: Kind, itemType: ItemType | undefined, { shape, values }: PyResult): Record<string, BlueprintNode> {
+function toBlueprint(kind: Kind, itemType: ItemType | undefined, result: PyResult): Record<string, BlueprintNode> {
+  if (kind === 'Text') return { main: { type: 'Text', value: result.values[0] } };
+  const { shape } = result;
+  const values = result.values as number[];
   const item = (type: ItemType, k: number) => type === 'Point'
     ? { type: 'Point', x: scalar(values[2 * k]), y: scalar(values[2 * k + 1]) }
     : { type: 'Scalar', value: scalar(values[k]) };
@@ -81,7 +85,7 @@ export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
     keyword: `${PYTHON_KEYWORD_PREFIX}${name}`,
     outputType: kind,
     // 'Array' too, so `computeBlueprint` passes an Array input whole instead of looping over it.
-    parameters: inputIds.map((_, i) => ({ name: `input${i}`, type: ['Scalar', 'Point', 'Array'] })),
+    parameters: inputIds.map((_, i) => ({ name: `input${i}`, type: ['Scalar', 'Point', 'Text', 'Array'] })),
     broadcastable: false,
     compute(inputs) {
       const values = inputs.map((node, i) => inputValue(node, inputIds[i]));

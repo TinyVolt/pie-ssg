@@ -19,6 +19,10 @@ class Point(Node):
     def __init__(self, id):
         super().__init__(id, "Point")
 
+class Text(Node):
+    def __init__(self, id):
+        super().__init__(id, "Text")
+
 class Array(Node):
     # `pie.Array[pie.Point]`, a type for `pie.lift`.
     def __class_getitem__(cls, item):
@@ -66,6 +70,8 @@ def _node(result):
         return Scalar(result.id)
     if result.type == "Point":
         return Point(result.id)
+    if result.type == "Text":
+        return Text(result.id)
     return Node(result.id, result.type)
 
 def _arg(a):
@@ -93,6 +99,8 @@ def _check_bridge():
 _RETURNS = [
     (Scalar, ("Scalar", None)),
     (Point, ("Point", None)),
+    (Text, ("Text", None)),
+    (str, ("Text", None)),
     (Array[Scalar], ("Array", "Scalar")),
     (Array[Point], ("Array", "Point")),
 ]
@@ -104,15 +112,16 @@ class _Slot:
 
 def lift(fn, out_type):
     """
-    A regular Python function `fn` can be _lifted_ to accept nodes (Scalar, Point and Array)
+    A regular Python function `fn` can be _lifted_ to accept nodes (Scalar, Point, Text and Array)
     g = pie.lift(fn, out_type)
     - If `fn` returns a num, `g` returns `Scalar`, out_type = `Scalar`
     - If `fn` returns a tuple or array of len 2, `g` returns `Point`, out_type = `Point`
+    - If `fn` returns a str, `g` returns `Text`, out_type = `Text` or `str`
     - If `fn` returns a numpy array, `g` can return `Array[Point]` or `Array[Scalar]`
     """
     returns = next((r for t, r in _RETURNS if out_type == t), None)
     if returns is None:
-        raise TypeError(f"pie.lift: out_type must be pie.Scalar, pie.Point, pie.Array[pie.Scalar] or pie.Array[pie.Point], got {out_type!r}")
+        raise TypeError(f"pie.lift: out_type must be pie.Scalar, pie.Point, pie.Text (or str), pie.Array[pie.Scalar] or pie.Array[pie.Point], got {out_type!r}")
     # The page's globals: `lift` is called from a block.
     scope = sys._getframe(1).f_globals
     name = getattr(fn, "__name__", None)
@@ -143,7 +152,7 @@ def _lifted_node(scope, target, label, returns, args, kwargs, out, hidden, fill,
     scope.setdefault("__pie_lift__", {})[reply.id] = call
     if kind == "Array":
         return Array(reply.id, tuple(shape), item)
-    return Scalar(reply.id) if kind == "Scalar" else Point(reply.id)
+    return {"Scalar": Scalar, "Point": Point, "Text": Text}[kind](reply.id)
 
 def _rerun(scope, node_id, values):
     """Called by the worker when an input of node `node_id` changes. `values`: the input values, in slot order."""
@@ -163,11 +172,13 @@ def _evaluate(scope, call, values):
         fn = scope[target]
     else:
         fn = target
-    # A Scalar's value arrives as a number, a Point's as [x, y], an Array's as {shape, values}.
+    # A Scalar's value arrives as a number, a Point's as [x, y], a Text's as a str, an Array's as {shape, values}.
     def fill(a):
         if not isinstance(a, _Slot):
             return a
         v = values[a.index]
+        if isinstance(v, str):
+            return v
         if isinstance(v, dict):
             import numpy as np
             return np.array(v["values"]).reshape(v["shape"])
@@ -183,8 +194,12 @@ def _is_number(v):
     return isinstance(v, numbers.Real)
 
 def _check_out_type_and_flatten(name, returns, result):
-    """`result` as (shape, values): every number in row-major order, a Point as x, y."""
+    """`result` as (shape, values): every number in row-major order, a Point as x, y. A Text's values: [the string]."""
     kind, item = returns
+    if kind == "Text":
+        if not isinstance(result, str):
+            raise TypeError(f"{name} is lifted to pie.Text, so it must return a str, got {type(result).__name__}")
+        return [], [result]
     if kind == "Scalar":
         if not _is_number(result):
             raise TypeError(f"{name} is lifted to pie.Scalar, so it must return a number, got {type(result).__name__}")

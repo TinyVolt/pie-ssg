@@ -22,19 +22,32 @@ export const Scalar: Node2NodeFunc = {
 };
 
 /**
- * Create a text node with a string value.
- * @param value - Text string value
+ * Create a text node with a string value. It is drawn only when given both x and y.
+ * @param value - Text string value (default '')
+ * @param x - X coordinate of the center (default: not drawn)
+ * @param y - Y coordinate of the center (default: not drawn)
+ * @param fontSize - Font size in pixels (default 12)
+ * @param w - Box width: 0 with h 0 = one line, no box; above 0 = fixed; -1 = fits the text, at most 5 (default 0)
+ * @param h - Box height: 0 with w 0 = one line, no box; above 0 = fixed; -1 = fits the text, at most 5 (default 0)
  * @returns Text node
  * @auxiliaryNodes None
  */
 export const Text: Node2NodeFunc = {
   keyword: 'text', outputType: 'Text',
-  parameters: [{ name: 'value', type: 'Text' }],
+  parameters: [
+    { name: 'value', type: 'Text', defaultValue: '' },
+    { name: 'x', type: 'Scalar', defaultValue: null },
+    { name: 'y', type: 'Scalar', defaultValue: null },
+    { name: 'fontSize', type: 'Scalar', defaultValue: 12 },
+    { name: 'w', type: 'Scalar', defaultValue: 0 },
+    { name: 'h', type: 'Scalar', defaultValue: 0 },
+  ],
   compute(inputs) {
     const inner = (ins: AnyNode[]) => {
       const textNode = ins[0] as TextNode;
       const value = textNode?.value || '';
-      return { main: { type: 'Text', value } };
+      const [x, y, fontSize, w, h] = ins.slice(1) as (ScalarNode | undefined)[];
+      return { main: { type: 'Text', value, x, y, fontSize, w, h } };
     };
     return inner(inputs);
   },

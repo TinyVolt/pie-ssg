@@ -55,7 +55,7 @@ Eg `/nodes/square.tsx` defines a `Square` node. Its `declare module` block adds 
 ## Calling in-built Python functions
 One can also lift a regular Python function to become a `Node2NodeFunc`-like function which accepts nodes as inputs and returns nodes as outputs using `pie.lift`. `pie.lift` takes two arguments:
 1. the function to lift, `f`
-2. the output node type - one of `pie.Scalar`, `pie.Point`, `pie.Array[pie.Scalar]` or `pie.Array[pie.Point]`. 
+2. the output node type - one of `pie.Scalar`, `pie.Point`, `pie.Text` (or `str`), `pie.Array[pie.Scalar]` or `pie.Array[pie.Point]`. 
 
 ```python
 import numpy as np 

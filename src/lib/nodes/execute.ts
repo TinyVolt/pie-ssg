@@ -106,15 +106,20 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], { 
     throw new Error(`Unknown function: ${keyword}`);
   }
 
-  const expected = func.parameters.length;
-  if (args.length !== expected) {
+  const total = func.parameters.length;
+  const required = func.parameters.filter(p => p.defaultValue === undefined).length;
+  if (args.length < required || args.length > total) {
     const names = func.parameters.map((p: ParameterDefinition) => p.name).join(', ');
-    throw new Error(`${keyword} needs exactly ${expected} argument${expected === 1 ? '' : 's'} (${names}), got ${args.length}`);
+    const count = required === total ? `exactly ${total}` : `${required} to ${total}`;
+    throw new Error(`${keyword} needs ${count} argument${total === 1 ? '' : 's'} (${names}), got ${args.length}`);
   }
+  // Left-out arguments take their defaults. A null default makes no node: `compute` gets undefined.
+  const allArgs = func.parameters.map((p, i) => (i < args.length ? args[i] : p.defaultValue!));
 
   // Check every type and shape first, so a bad call leaves no literal nodes behind.
   const broadcastInputShapes: number[][] = [];
-  args.forEach((arg, i) => {
+  allArgs.forEach((arg, i) => {
+    if (arg === null) return;
     const param = func.parameters[i];
     const types = Array.isArray(param.type) ? param.type : [param.type];
     let got = argType(arg, store);
@@ -140,18 +145,18 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], { 
   checkColor(keyword, 'fill', fill);
   checkColor(keyword, 'stroke', stroke);
 
-  const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
+  const inputNodeIds = await Promise.all(allArgs.map(arg => (arg === null ? undefined : resolveArg(arg, store))));
+  const inputs = () => inputNodeIds.map(id => (id === undefined ? undefined : store.getNodeValue(id)!) as AnyNode);
 
   if ('run' in func) {
-    const inputs = inputNodeIds.map(id => store.getNodeValue(id)!);
-    const runs = batch(() => broadcastItems(func.parameters, inputs).map(itemInputs => func.run(itemInputs, store, animate ?? false)));
+    const runs = batch(() => broadcastItems(func.parameters, inputs()).map(itemInputs => func.run(itemInputs, store, animate ?? false)));
     await Promise.all(runs);
     return { id: '', type: 'Dummy' };
   }
 
   const outputType = broadcastInputShapes.length > 0
     ? 'Array'
-    : func.resolveOutputType?.(inputNodeIds.map(id => store.getNodeValue(id)!)) ?? func.outputType;
+    : func.resolveOutputType?.(inputs()) ?? func.outputType;
   const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(outputType));
   new NodeReconciler().evaluate(func, inputNodeIds, store, id, hidden, fill, stroke);
 

@@ -51,7 +51,8 @@ function sourceIndex(shape: number[], index: number[]): number {
  * when none is. Like `computeBlueprint`, an item with a Dummy input is skipped.
  */
 export function broadcastItems(parameters: ParameterDefinition[], inputs: AnyNode[]): AnyNode[][] {
-  const broadcasts = inputs.map((node, i) => isBroadcast(node.type, parameters[i]));
+  // An input is undefined for a left-out optional parameter.
+  const broadcasts = inputs.map((node, i) => node !== undefined && isBroadcast(node.type, parameters[i]));
   if (!broadcasts.includes(true)) return [inputs];
 
   const shapes = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).shape : []);
@@ -62,7 +63,7 @@ export function broadcastItems(parameters: ParameterDefinition[], inputs: AnyNod
   for (let k = 0; k < size; k++) {
     const index = unravel(k, shape);
     const itemInputs = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).items[sourceIndex(shapes[i], index)] : node);
-    if (!itemInputs.some(node => node.type === 'Dummy')) items.push(itemInputs);
+    if (!itemInputs.some(node => node?.type === 'Dummy')) items.push(itemInputs);
   }
   return items;
 }
@@ -74,7 +75,8 @@ export function broadcastItems(parameters: ParameterDefinition[], inputs: AnyNod
  * Dummy or its own main node is.
  */
 export function computeBlueprint(func: Node2NodeFunc, inputs: AnyNode[]): Record<string, BlueprintNode> {
-  const broadcasts = inputs.map((node, i) => isBroadcast(node.type, func.parameters[i]));
+  // An input is undefined for a left-out optional parameter.
+  const broadcasts = inputs.map((node, i) => node !== undefined && isBroadcast(node.type, func.parameters[i]));
   if (!broadcasts.includes(true)) return func.compute(inputs);
 
   const shapes = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).shape : []);
@@ -86,7 +88,7 @@ export function computeBlueprint(func: Node2NodeFunc, inputs: AnyNode[]): Record
   for (let k = 0; k < size; k++) {
     const index = unravel(k, shape);
     const itemInputs = inputs.map((node, i) => broadcasts[i] ? (node as ArrayNode).items[sourceIndex(shapes[i], index)] : node);
-    const item = itemInputs.some(node => node.type === 'Dummy') ? { main: DUMMY } : func.compute(itemInputs);
+    const item = itemInputs.some(node => node?.type === 'Dummy') ? { main: DUMMY } : func.compute(itemInputs);
     if (item.main.type === 'Dummy') {
       items.push(DUMMY);
       continue;
