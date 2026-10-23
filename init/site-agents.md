@@ -74,6 +74,7 @@ pie.circle(a, r)
 - All editors on one page share the same Python variables and the same canvas.
 - `import numpy`, `scipy`, `matplotlib` and other [Pyodide packages](https://pyodide.org/en/0.28.2/usage/packages-in-pyodide.html) load on first use.
 - `plt.show()` shows matplotlib figures under the editor.
+- `` ```python-editor collapsed `` starts the editor collapsed: only its toolbar shows until the reader expands it. Other words after `python-editor` are ignored.
 
 ## Drawing on the canvas: `pie.*`
 

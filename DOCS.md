@@ -10,7 +10,7 @@ Each element on the canvas is a `Node`. Each `Node` has an `id`.
 ---
 
 ## Python editor
-Use the code fence `python-editor` creates a python editor with button to run and stop the code it contains. 
+Use the code fence `python-editor` creates a python editor with button to run and stop the code it contains. Use `` ```python-editor collapsed `` to start an editor in collapsed mode. 
 
 One of the items in the roadmap is "Python for all programmatic tasks". It allows a reader to use Python to create visualizations and animations in the canvas (which would otherwise require JS) in addition to just running pure Python code. There are two ways to do so:
 - calling custom JS functions
