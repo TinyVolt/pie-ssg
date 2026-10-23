@@ -1,3 +1,4 @@
+[fully written by an agent except this line]
 # pie-ssg site
 
 This folder is a site made with [pie-ssg](https://github.com/TinyVolt/pie-ssg): a Markdown-based static site generator for interactive science explainers. Pages are Markdown. Readers can run Python in the page and draw on a canvas.
@@ -83,6 +84,12 @@ pie.scalar(3, out='r')   # the circle above now has radius 3
 
 Common mistake: `center = pie.point(1, 2)` does not give the node the id `center`. It gets an automatic id. Use `pie.point(1, 2, out='center')`.
 
+`fill='<color>'` and `stroke='<color>'` color a node, e.g. `pie.circle(a, r, fill='orange', stroke='#333')`:
+
+- A color is any CSS color (`'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error.
+- Every node the call makes gets the colors, including extra nodes such as the center point of `ellipse_from_foci`.
+- A node shows only the colors its render function draws with. A point uses only `fill`, a line only `stroke`. For `partial`'s arrow, `stroke` colors the line and `fill` the head.
+
 `unit` is a system node: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
 
 Built-in functions:
@@ -116,9 +123,11 @@ These change existing nodes instead of making a new one. They run once, when cal
 | `pie.translate_point_by(p, dx, dy)` | moves point `p` by (dx, dy) |
 | `pie.translate_scalar_to(s, value)` | sets scalar `s` to `value` |
 | `pie.translate_scalar_by(s, delta)` | adds `delta` to scalar `s` |
+| `pie.set_fill(node, color)` | sets `node`'s fill |
+| `pie.set_stroke(node, color)` | sets `node`'s stroke |
 
-- `p` or `s` can be an array: every item moves.
-- A moved node stops following the nodes it was built from. Nodes built from it follow the move.
+- `p`, `s` or `node` can be an array: every item changes.
+- A moved node stops following the nodes it was built from. Nodes built from it follow the move. A moved point keeps its colors.
 
 ### Lifting a Python function: `pie.lift`
 
@@ -131,6 +140,8 @@ n = pie.scalar(5, out='n')
 xs = linspace(0, n, 5)
 pie.point(xs, 0)          # 5 points from 0 to 5; set `n` again and they move
 ```
+
+A lifted function also takes `fill` and `stroke`, e.g. `linspace(0, n, 5, fill='red')`.
 
 Limits:
 
@@ -195,7 +206,8 @@ const renderSquare = (square: Accessor<SquareNode>) => {
       y={num(square().center.y) - side() / 2}
       width={side()}
       height={side()}
-      fill="none" stroke="currentColor" stroke-width={2} vector-effect="non-scaling-stroke"
+      fill={square().fill ?? 'none'} stroke={square().stroke ?? 'currentColor'}
+      stroke-width={2} vector-effect="non-scaling-stroke"
     />
   );
 };
@@ -207,6 +219,7 @@ export const Square: NodeDefinition<SquareNode> = { type: 'Square', prefix: 'sq'
 - `prefix`: the start of automatic ids: `sq` gives `sq0`, `sq1`, …. Default: the type name in lower case.
 - `render(node, unit)`: returns Solid SVG elements, in grid units. `node()` returns the node's current data. Call it inside the JSX attributes, so the drawing updates when the node changes. `unit` is pixels per grid unit: divide by it for a size that stays fixed on screen. Leave `render` out for a node that isn't drawn.
 - `num(...)` turns a node's number field into a plain JS number.
+- `node().fill` and `node().stroke` hold the colors set from Python, or `undefined`. Use them before your default, e.g. `fill={square().fill ?? 'none'}`. A render function that doesn't read them ignores them.
 - The `declare module` block is needed so that a `Node2NodeFunc` accepts the type in `outputType` and `parameters`.
 - Python makes a node of your type through a function in `functions/`. `functions/square.ts` adds `pie.square(center, side)`.
 - The built-in node types are in `src/lib/nodes/state/Node.ts`, and their render functions are in `src/lib/nodes/render/renderLogic.tsx`.
