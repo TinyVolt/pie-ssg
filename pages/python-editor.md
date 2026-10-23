@@ -14,7 +14,7 @@ print(A)
 
 Below are python editors created using \`\`\`python-editor ... \`\`\` code fence:
 
-```python-editor
+```python-editor collapsed
 a = pie.point(1, 2, out='a')
 r = pie.scalar(1, out='r')
 c = pie.circle(a, r)

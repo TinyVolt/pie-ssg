@@ -38,8 +38,11 @@ type OutputEntry =
   | { type: 'text'; text: Accessor<string>; setText: Setter<string> }
   | { type: 'plot'; png: string };
 
-/** An editable block of Python. Run draws its `pie.*` calls on the scope's canvas. */
-export function PythonEditor(props: { code: string; scope: PythonScope }) {
+/**
+ * An editable block of Python. Run draws its `pie.*` calls on the scope's canvas.
+ * `collapsed`: start with only the toolbar showing.
+ */
+export function PythonEditor(props: { code: string; collapsed?: boolean; scope: PythonScope }) {
   let host!: HTMLDivElement;
   let view: EditorView | undefined;
   let stop: (() => void) | undefined;
@@ -48,7 +51,7 @@ export function PythonEditor(props: { code: string; scope: PythonScope }) {
   const [output, setOutput] = createSignal<OutputEntry[]>([]);
   const [error, setError] = createSignal('');
   const [note, setNote] = createSignal('');
-  const [collapsed, setCollapsed] = createSignal(false);
+  const [collapsed, setCollapsed] = createSignal(props.collapsed ?? false);
   const [copied, setCopied] = createSignal(false);
   const active = () => isActive(status());
   const result = (): RunResult | undefined => {

@@ -1,5 +1,5 @@
 import katex from 'katex';
-import { Marked } from 'marked';
+import { Marked, Renderer } from 'marked';
 
 function renderMath(formula: string, displayMode: boolean): string {
   return katex.renderToString(formula, { displayMode, throwOnError: false });
@@ -47,6 +47,14 @@ const marked = new Marked({
       },
     },
   ],
+  renderer: {
+    // ```python-editor collapsed: marked keeps only the first word, so mark the block for the editor here.
+    code(token) {
+      const [lang, ...flags] = (token.lang ?? '').split(/\s+/);
+      if (lang !== 'python-editor' || !flags.includes('collapsed')) return false;
+      return new Renderer().code(token).replace('<code ', '<code data-collapsed ');
+    },
+  },
 });
 
 export function renderMarkdown(markdown: string): string {

@@ -30,9 +30,10 @@ export function MarkdownBody(props: { html: string; store?: NodeStore; class?: s
         const pre = codeEl.parentElement!;
         if (!pre.isConnected) return;
         const code = codeEl.textContent ?? '';
+        const collapsed = codeEl.hasAttribute('data-collapsed');
         const host = document.createElement('div');
         pre.replaceWith(host);
-        disposers.push(render(() => <PythonEditor code={code} scope={scope} />, host));
+        disposers.push(render(() => <PythonEditor code={code} collapsed={collapsed} scope={scope} />, host));
       });
     });
   });
