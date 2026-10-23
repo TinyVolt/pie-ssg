@@ -2,7 +2,7 @@ import { createSignal } from 'solid-js';
 import { NodeReconciler, PYTHON_KEYWORD_PREFIX, type BlueprintNode, type Node2NodeFunc } from '~/lib/nodes/functions/Node2NodeFunc';
 import { checkOut } from '~/lib/nodes/execute';
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
-import type { AnyNode } from '~/lib/nodes/state/Node';
+import { checkColor, type AnyNode } from '~/lib/nodes/state/Node';
 import { num, scalar } from '~/lib/nodes/jax';
 
 /** The type passed to `pie.lift`: `pie.Scalar`, `pie.Point`, or `pie.Array[...]` of `itemType`. */
@@ -26,6 +26,8 @@ export interface LiftSave extends PyResult {
   kind: Kind;
   itemType?: ItemType;
   hidden: boolean;
+  fill?: string;
+  stroke?: string;
 }
 
 export type Rerun = (nodeId: string, values: InputValue[], done: (result?: PyResult, error?: string) => void) => void;
@@ -37,10 +39,12 @@ function inputValue(node: AnyNode | undefined, id: string): InputValue {
   throw new Error(`'${id}' is a ${node.type}; only Scalar and Point nodes can be inputs`);
 }
 
-/** First half of `g(a)`: checks the inputs and `out`, and reserves the output id. Python then calls `f` with `values`. */
-export function startLift(store: NodeStore, name: string, inputIds: string[], kind: Kind, out?: string) {
+/** First half of `g(a)`: checks the inputs, `out`, `fill` and `stroke`, and reserves the output id. Python then calls `f` with `values`. */
+export function startLift(store: NodeStore, name: string, inputIds: string[], kind: Kind, out?: string, fill?: string, stroke?: string) {
   const values = inputIds.map(id => inputValue(store.getNodeValue(id), id));
   checkOut(name, out, inputIds.map(id => ({ id })));
+  checkColor(name, 'fill', fill);
+  checkColor(name, 'stroke', stroke);
   const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(kind));
   return { id, values };
 }
@@ -64,7 +68,7 @@ function toBlueprint(kind: Kind, itemType: ItemType | undefined, { shape, values
  * the node keeps its value and asks `rerun` for a new one. Rerun errors go to the console.
  */
 export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
-  const { id, name, inputIds, kind, itemType, hidden } = save;
+  const { id, name, inputIds, kind, itemType, hidden, fill, stroke } = save;
   const [blueprint, setBlueprint] = createSignal(toBlueprint(kind, itemType, save));
   // The input values of the latest result or rerun request. Unset until the first compute, which uses the first result.
   let requested: string | undefined;
@@ -89,5 +93,5 @@ export function saveLift(store: NodeStore, save: LiftSave, rerun: Rerun) {
       return blueprint();
     },
   };
-  new NodeReconciler().evaluate(func, inputIds, store, id, hidden);
+  new NodeReconciler().evaluate(func, inputIds, store, id, hidden, fill, stroke);
 }

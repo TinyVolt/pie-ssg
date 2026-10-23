@@ -2,7 +2,7 @@ import { batch, createMemo, createRoot } from 'solid-js';
 import { getFunction, getSideEffect } from './functions/registry';
 import { NodeReconciler, ParameterDefinition } from './functions/Node2NodeFunc';
 import { NodeStore } from './state/NodeStore';
-import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode } from './state/Node';
+import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode, checkColor } from './state/Node';
 import { scalar } from './jax';
 import { leaves, listItemType, listShape, sha256 } from './tensors/tensor';
 import { broadcastItems, broadcastShapes, isBroadcast } from './tensors/broadcast';
@@ -90,7 +90,7 @@ export function checkOut(keyword: string, out: unknown, args: Arg[]) {
 }
 
 /** `out` is the id for the output node. Without it the id is generated. */
-export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string, hidden?: boolean): Promise<ExecuteResult> {
+export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string, hidden?: boolean, fill?: string, stroke?: string): Promise<ExecuteResult> {
   const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
@@ -124,6 +124,10 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
 
   checkOut(keyword, out, args);
   if ('run' in func && hidden !== undefined) throw new Error(`${keyword} does not take hidden`);
+  if ('run' in func && fill !== undefined) throw new Error(`${keyword} does not take fill`);
+  if ('run' in func && stroke !== undefined) throw new Error(`${keyword} does not take stroke`);
+  checkColor(keyword, 'fill', fill);
+  checkColor(keyword, 'stroke', stroke);
 
   const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
 
@@ -139,7 +143,7 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
     ? 'Array'
     : func.resolveOutputType?.(inputNodeIds.map(id => store.getNodeValue(id)!)) ?? func.outputType;
   const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(outputType));
-  new NodeReconciler().evaluate(func, inputNodeIds, store, id, hidden);
+  new NodeReconciler().evaluate(func, inputNodeIds, store, id, hidden, fill, stroke);
 
   const node = store.getNodeValue(id);
   if (node?.type === 'Array') return { id, type: node.type, shape: node.shape, itemType: node.itemType };

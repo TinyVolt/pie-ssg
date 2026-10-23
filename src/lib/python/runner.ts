@@ -62,13 +62,13 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     }
     if (data.type === 'lift') {
       try {
-        reply({ result: startLift(store, data.name, data.inputIds, data.kind, data.out) });
+        reply({ result: startLift(store, data.name, data.inputIds, data.kind, data.out, data.fill, data.stroke) });
       } catch (err) {
         reply({ error: message(err) });
       }
       return;
     }
-    execute(store, data.keyword, data.args, data.out, data.hidden).then(
+    execute(store, data.keyword, data.args, data.out, data.hidden, data.fill, data.stroke).then(
       (result) => reply({ result }),
       (err) => reply({ error: message(err) }),
     );

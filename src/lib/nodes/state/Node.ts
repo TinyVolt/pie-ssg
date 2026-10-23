@@ -16,6 +16,10 @@ export interface Node {
   id: string;
   type: string;
   hidden?: boolean;
+  /** A CSS color or 'none'. */
+  fill?: string;
+  /** A CSS color or 'none'. */
+  stroke?: string;
   __graph_deps?: {
     funcKeyword: string;
     inputNodes: AnyNode[];
@@ -23,6 +27,12 @@ export interface Node {
     // ID of the 'main' output node, set on a function's auxiliary nodes.
     parentId?: string;
   };
+}
+
+export function checkColor(keyword: string, name: string, value?: string) {
+  if (value !== undefined && value !== 'none' && !CSS.supports('color', value)) {
+    throw new Error(`${keyword}: ${name} '${value}' is not a valid color`);
+  }
 }
 
 export interface NodeDefinition<N extends Node = AnyNode> {

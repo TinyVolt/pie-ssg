@@ -15,15 +15,15 @@ const request = (message: object) =>
     postMessage({ ...message, reqId });
   });
 
-const call = (keyword: string, args: unknown[], out?: string, hidden?: boolean) =>
-  request({ type: 'call', keyword, args, out, hidden });
+const call = (keyword: string, args: unknown[], out?: string, hidden?: boolean, fill?: string, stroke?: string) =>
+  request({ type: 'call', keyword, args, out, hidden, fill, stroke });
 
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
 
 /** First half of `g(a)` for `g = pie.lift(f, ...)`: the input values and the output id. */
-const lift = (name: string, inputIds: string[], kind: string, out?: string) =>
-  request({ type: 'lift', name, inputIds, kind, out });
+const lift = (name: string, inputIds: string[], kind: string, out?: string, fill?: string, stroke?: string) =>
+  request({ type: 'lift', name, inputIds, kind, out, fill, stroke });
 
 /** Second half of `g(a)`: the first result. Python doesn't wait for a reply. */
 const lift_save = (save: object) => postMessage({ type: 'lift_save', ...save });

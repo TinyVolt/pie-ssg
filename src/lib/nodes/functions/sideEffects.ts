@@ -1,6 +1,6 @@
 import { createMemo, createRoot } from 'solid-js';
 import { SideEffectFunc } from './Node2NodeFunc';
-import { AnyNode, PointNode, ScalarNode, getNodeTypes } from '../state/Node';
+import { AnyNode, PointNode, ScalarNode, TextNode, checkColor, getNodeTypes } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
 import { add, ref } from '../jax';
 
@@ -39,6 +39,36 @@ export const Show: SideEffectFunc = {
 };
 
 /**
+ * Set a node's fill.
+ * @param node - Node to change
+ * @param color - A CSS color, like 'red' or '#ff0000', or 'none'
+ */
+export const SetFill: SideEffectFunc = {
+  keyword: 'set_fill',
+  parameters: [{ name: 'node', type: anyItem }, { name: 'color', type: 'Text' }],
+  run(inputs, store) {
+    const fill = (inputs[1] as TextNode).value;
+    checkColor('set_fill', 'fill', fill);
+    store.updateNode(inputs[0].id, { fill });
+  },
+};
+
+/**
+ * Set a node's stroke.
+ * @param node - Node to change
+ * @param color - A CSS color, like 'red' or '#ff0000', or 'none'
+ */
+export const SetStroke: SideEffectFunc = {
+  keyword: 'set_stroke',
+  parameters: [{ name: 'node', type: anyItem }, { name: 'color', type: 'Text' }],
+  run(inputs, store) {
+    const stroke = (inputs[1] as TextNode).value;
+    checkColor('set_stroke', 'stroke', stroke);
+    store.updateNode(inputs[0].id, { stroke });
+  },
+};
+
+/**
  * Clear the canvas and reset the system nodes.
  */
 export const Clear: SideEffectFunc = {
@@ -60,7 +90,7 @@ export const TranslatePointTo: SideEffectFunc = {
   parameters: [{ name: 'point', type: 'Point' }, { name: 'x', type: 'Scalar' }, { name: 'y', type: 'Scalar' }],
   run(inputs, store) {
     const [point, x, y] = inputs as [PointNode, ScalarNode, ScalarNode];
-    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, x: ref(x.value), y: ref(y.value) });
+    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, fill: point.fill, stroke: point.stroke, x: ref(x.value), y: ref(y.value) });
   },
 };
 
@@ -77,7 +107,7 @@ export const TranslatePointBy: SideEffectFunc = {
     const [point, dx, dy] = inputs as [PointNode, ScalarNode, ScalarNode];
     const x = add(ref(point.x), ref(dx.value));
     const y = add(ref(point.y), ref(dy.value));
-    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, x, y });
+    replaceNode(store, { id: point.id, type: 'Point', hidden: point.hidden, fill: point.fill, stroke: point.stroke, x, y });
   },
 };
 

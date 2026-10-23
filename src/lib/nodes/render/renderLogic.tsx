@@ -13,14 +13,14 @@ const ARROW_HEAD = 10;
 // the attributes, so a node change updates those attributes in place.
 const renderPoint = (point: Accessor<PointNode>, unit: Accessor<number>) => {
     return (
-        <circle cx={num(point().x)} cy={num(point().y)} r={POINT_RADIUS / unit()} fill={COLOR} />
+        <circle cx={num(point().x)} cy={num(point().y)} r={POINT_RADIUS / unit()} fill={point().fill ?? COLOR} />
     );
 }
 
 const renderLine = (line: Accessor<LineNode>) => {
     return (
         <Show when={line().p1 && line().p2}>
-            <line x1={num(line().p1.x)} y1={num(line().p1.y)} x2={num(line().p2.x)} y2={num(line().p2.y)} stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <line x1={num(line().p1.x)} y1={num(line().p1.y)} x2={num(line().p2.x)} y2={num(line().p2.y)} stroke={line().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -33,7 +33,7 @@ const renderTriangle = (triangle: Accessor<TriangleNode>) => {
 
     return (
         <Show when={triangle().vertices[0] && triangle().vertices[1] && triangle().vertices[2]}>
-            <polygon points={pointsStr()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <polygon points={pointsStr()} fill={triangle().fill ?? 'none'} stroke={triangle().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -41,7 +41,7 @@ const renderTriangle = (triangle: Accessor<TriangleNode>) => {
 const renderCircle = (circle: Accessor<CircleNode>) => {
     return (
         <Show when={circle().center}>
-            <circle cx={num(circle().center.x)} cy={num(circle().center.y)} r={num(circle().radius.value)} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <circle cx={num(circle().center.x)} cy={num(circle().center.y)} r={num(circle().radius.value)} fill={circle().fill ?? 'none'} stroke={circle().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -55,7 +55,7 @@ const renderEllipse = (ellipse: Accessor<EllipseNode>) => {
 
     return (
         <Show when={ellipse().center}>
-            <ellipse cx={cx()} cy={cy()} rx={rx()} ry={ry()} transform={`rotate(${rotation()} ${cx()} ${cy()})`} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <ellipse cx={cx()} cy={cy()} rx={rx()} ry={ry()} transform={`rotate(${rotation()} ${cx()} ${cy()})`} fill={ellipse().fill ?? 'none'} stroke={ellipse().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -80,7 +80,7 @@ const renderArc = (arc: Accessor<ArcNode>) => {
 
     return (
         <Show when={arc().center}>
-            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <path d={pathData()} fill={arc().fill ?? 'none'} stroke={arc().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -93,7 +93,7 @@ const renderBezierQuadratic = (bezier: Accessor<BezierQuadraticNode>) => {
 
     return (
         <Show when={bezier().p1 && bezier().control && bezier().p2}>
-            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <path d={pathData()} fill={bezier().fill ?? 'none'} stroke={bezier().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -106,7 +106,7 @@ const renderBezierCubic = (bezier: Accessor<BezierCubicNode>) => {
 
     return (
         <Show when={bezier().p1 && bezier().control1 && bezier().control2 && bezier().p2}>
-            <path d={pathData()} fill="none" stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+            <path d={pathData()} fill={bezier().fill ?? 'none'} stroke={bezier().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
         </Show>
     );
 }
@@ -134,8 +134,8 @@ const renderPointGrad = (grad: Accessor<PointGradNode>, unit: Accessor<number>) 
         <Show when={arrow()}>
             {(a) => (
                 <>
-                    <line x1={a().x} y1={a().y} x2={a().baseX} y2={a().baseY} stroke={COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
-                    <polygon points={a().head} fill={COLOR} />
+                    <line x1={a().x} y1={a().y} x2={a().baseX} y2={a().baseY} stroke={grad().stroke ?? COLOR} stroke-width={STROKE_WIDTH} vector-effect="non-scaling-stroke" />
+                    <polygon points={a().head} fill={grad().fill ?? COLOR} />
                 </>
             )}
         </Show>

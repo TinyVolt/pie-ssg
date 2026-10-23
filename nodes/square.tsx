@@ -25,8 +25,8 @@ const renderSquare = (square: Accessor<SquareNode>) => {
       y={num(square().center.y) - side() / 2}
       width={side()}
       height={side()}
-      fill="none"
-      stroke="currentColor"
+      fill={square().fill ?? 'none'}
+      stroke={square().stroke ?? 'currentColor'}
       stroke-width={2}
       vector-effect="non-scaling-stroke"
     />
