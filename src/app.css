@@ -256,6 +256,8 @@ main .katex-display {
 /* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
 pre:has(> code.language-python-editor) {
   visibility: hidden;
+  max-height: 20rem;
+  overflow: hidden;
 }
 
 .python-editor {
@@ -265,8 +267,24 @@ pre:has(> code.language-python-editor) {
   font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
 }
 
+/* Default cap on the code's height. Dragging the resize bar replaces it with a fixed height. */
 .python-editor .cm-editor {
   font-size: 0.875rem;
+  max-height: 20rem;
+}
+
+.python-editor .cm-scroller {
+  overflow-y: auto;
+}
+
+.python-editor-resize {
+  height: 6px;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.python-editor-resize:hover {
+  background: var(--color-border, #ddd);
 }
 
 .python-editor-toolbar {
@@ -278,6 +296,9 @@ pre:has(> code.language-python-editor) {
 }
 
 .python-editor-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
   padding: 0;
@@ -296,9 +317,23 @@ pre:has(> code.language-python-editor) {
   font-size: 0.875rem;
 }
 
-/* ↺ draws small in most fonts. */
-.python-editor-reset {
-  font-size: 1.125rem;
+.python-editor-result {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.python-editor-result-success {
+  color: var(--color-success, #1a7f37);
+}
+
+.python-editor-result-error {
+  color: var(--color-error, #c00);
+}
+
+.python-editor-result-stopped {
+  color: var(--color-warning, #9a6700);
 }
 
 .python-editor-collapse {
@@ -307,6 +342,7 @@ pre:has(> code.language-python-editor) {
 
 /* Collapsed: only the toolbar shows. Hidden with CSS so the editor keeps its code. */
 .python-editor-collapsed .python-editor-code,
+.python-editor-collapsed .python-editor-resize,
 .python-editor-collapsed .python-editor-output {
   display: none;
 }
@@ -315,10 +351,18 @@ pre:has(> code.language-python-editor) {
   border-top: none;
 }
 
+/* Right padding leaves room for the copy button so it doesn't cover the text. */
 .python-editor-output {
-  padding: 0.5rem;
+  position: relative;
+  padding: 0.5rem 2.75rem 0.5rem 0.5rem;
   border-top: 1px solid var(--color-border, #ddd);
   font-size: 0.875rem;
+}
+
+.python-editor-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
 }
 
 .python-editor-text {

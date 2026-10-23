@@ -32,6 +32,8 @@ Do the work in the folders above. Don't edit `node_modules/@tinyvolt/pie/`: inst
 Flat `key: value` lines. Values may be quoted. A key may appear only once.
 
 - `title` (required): shown in the header and in every browser tab title.
+- `url`: where the site is deployed, e.g. `https://example.com`. Needed for `sitemap.xml`, `robots.txt`, canonical links and `og:url`; without it the build skips them and warns.
+- `description`: shown in search results and link previews for a page with no `description` of its own.
 
 ## Pages
 
@@ -47,13 +49,14 @@ canvas: left
 ```
 
 - `title`: the tab title. Empty means the tab shows the site title alone.
+- `description`: shown in search results and link previews. Empty means `site.yml`'s `description`.
 - `canvas`: `left`, `right`, `top`, `bottom` or `none` (default). Adds a canvas on that side of the page.
 
 Other keys are ignored. A bad value fails the build, and shows an error screen in dev.
 
 Math uses KaTeX: `$…$` inline, and `$$…$$` on its own lines for a display block.
 
-A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
+A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/pages`). For example, `pages/pages.md` fails the build.
 
 ## Python editors
 
@@ -71,6 +74,7 @@ pie.circle(a, r)
 - All editors on one page share the same Python variables and the same canvas.
 - `import numpy`, `scipy`, `matplotlib` and other [Pyodide packages](https://pyodide.org/en/0.28.2/usage/packages-in-pyodide.html) load on first use.
 - `plt.show()` shows matplotlib figures under the editor.
+- `` ```python-editor collapsed `` starts the editor collapsed: only its toolbar shows until the reader expands it. Other words after `python-editor` are ignored.
 
 ## Drawing on the canvas: `pie.*`
 

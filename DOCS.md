@@ -10,7 +10,7 @@ Each element on the canvas is a `Node`. Each `Node` has an `id`.
 ---
 
 ## Python editor
-Use the code fence `python-editor` creates a python editor with button to run and stop the code it contains. 
+Use the code fence `python-editor` creates a python editor with button to run and stop the code it contains. Use `` ```python-editor collapsed `` to start an editor in collapsed mode. 
 
 One of the items in the roadmap is "Python for all programmatic tasks". It allows a reader to use Python to create visualizations and animations in the canvas (which would otherwise require JS) in addition to just running pure Python code. There are two ways to do so:
 - calling custom JS functions
@@ -85,6 +85,13 @@ The root folder `/layouts` provides `index.tsx` and `header.tsx` to customize th
 
 **Caveat**
 `pages/index.md` is served at `/index`, not `/`. The homepage always comes from `/layouts/index.tsx`.
+
+---
+
+## SEO
+Set `url` in `site.yml` (eg `url: https://example.com`) before deploying. The build then writes `sitemap.xml` (every page) and `robots.txt` (pointing to the sitemap), and every page gets a canonical link and `og:url`. Without `url`, the build skips these and warns. A file of the same name in `/public` replaces the generated one.
+
+Every page also gets `og:title`, `og:site_name` and, if set, a description: the page's frontmatter `description`, or else `site.yml`'s `description`.
 
 ---
 
