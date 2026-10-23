@@ -23,9 +23,9 @@ npm run preview   # preview the build with vite
 | `styles/` | CSS. Every `.css` file here loads after the built-in styles, so it wins. |
 | `public/` | Static files, served as-is. |
 | `site.yml` | Site settings. |
-| `src/` | The pie-ssg app itself. |
+| `node_modules/@tinyvolt/pie/src/` | The pie-ssg app itself, installed as the `@tinyvolt/pie` package. `~/` in imports means this folder. |
 
-Do the work in the folders above. Edit `src/` only when the task can't be done from them.
+Do the work in the folders above. Don't edit `node_modules/@tinyvolt/pie/`: installing or updating the package replaces it.
 
 ## site.yml
 
@@ -53,7 +53,7 @@ Other keys are ignored. A bad value fails the build, and shows an error screen i
 
 Math uses KaTeX: `$…$` inline, and `$$…$$` on its own lines for a display block.
 
-A page's URL must not match a route in `src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
+A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
 
 ## Python editors
 
@@ -176,8 +176,8 @@ export const Midpoint: Node2NodeFunc = {
 
 - `compute` returns an object whose `main` entry is the output node. Other entries are extra nodes drawn alongside it.
 - Do the math with the helpers in `~/lib/nodes/jax` (`add`, `sub`, `mul`, `div`, `sqrt`, `sin`, `cos`, `atan2`, …), not plain JS operators. Wrap a node's number field in `ref(...)` before using it. These keep `pie.partial` working on your function.
-- Node types and their fields are in `src/lib/nodes/state/Node.ts`.
-- A file can also export a `SideEffectFunc` (same module as `Node2NodeFunc`): `keyword`, `parameters`, and `run(inputs, store)`, which changes the store instead of returning nodes. See `src/lib/nodes/functions/sideEffects.ts`.
+- Node types and their fields are in `node_modules/@tinyvolt/pie/src/lib/nodes/state/Node.ts`.
+- A file can also export a `SideEffectFunc` (same module as `Node2NodeFunc`): `keyword`, `parameters`, and `run(inputs, store)`, which changes the store instead of returning nodes. See `node_modules/@tinyvolt/pie/src/lib/nodes/functions/sideEffects.ts`.
 - A keyword used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Your own node types: `nodes/`
@@ -226,7 +226,7 @@ export const Square: NodeDefinition<SquareNode> = { type: 'Square', prefix: 'sq'
 - `node().fill` and `node().stroke` hold the colors set from Python, or `undefined`. Use them before your default, e.g. `fill={square().fill ?? 'none'}`. A render function that doesn't read them ignores them.
 - The `declare module` block is needed so that a `Node2NodeFunc` accepts the type in `outputType` and `parameters`.
 - Python makes a node of your type through a function in `functions/`. `functions/square.ts` adds `pie.square(center, side)`.
-- The built-in node types are in `src/lib/nodes/state/Node.ts`, and their render functions are in `src/lib/nodes/render/renderLogic.tsx`.
+- The built-in node types are in `node_modules/@tinyvolt/pie/src/lib/nodes/state/Node.ts`, and their render functions are in `node_modules/@tinyvolt/pie/src/lib/nodes/render/renderLogic.tsx`.
 - A type name used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Layouts: `layouts/`
@@ -245,7 +245,7 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 `npm run build` fails, with a message naming the file, when:
 
 - a page's frontmatter or `site.yml` has a bad line or value, or `site.yml` has no `title`
-- a page's URL matches a route in `src/routes/`
+- a page's URL matches a route in `node_modules/@tinyvolt/pie/src/routes/`
 - a `functions/` keyword is used twice
 - a `nodes/` type name is used twice
 - a `layouts/` file has no default export

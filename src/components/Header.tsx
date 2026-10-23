@@ -1,4 +1,4 @@
-import site from "../../site.yml";
+import site from "/site.yml";
 
 /** The site name and nav links, shown at the top of every page when the site has no `layouts/header.tsx`. */
 export function Header() {

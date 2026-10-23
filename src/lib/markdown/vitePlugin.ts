@@ -4,6 +4,7 @@ import type { Plugin } from 'vite';
 import { parseFrontmatter } from './frontmatter';
 import type { Page } from './pages';
 import { renderMarkdown } from './render';
+import { APP_DIR } from '../appDir';
 
 /**
  * Turns each `pages/**\/*.md` into a module whose default export is a `Page`, at build time,
@@ -51,7 +52,7 @@ export function checkPageRoutes(): Plugin {
     buildStart() {
       if (checked) return;
       checked = true;
-      const routes = listFiles(path.join(root, 'src/routes'))
+      const routes = listFiles(path.join(APP_DIR, 'routes'))
         .filter(file => /\.(tsx|ts|jsx|js)$/.test(file) && file !== PAGE_ROUTE)
         .map(file => ({ file, pattern: routePattern(file) }));
       const clashes: string[] = [];

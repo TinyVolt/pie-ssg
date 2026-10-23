@@ -1,5 +1,6 @@
 import path from 'node:path';
 import { runnerImport, type Plugin } from 'vite';
+import { APP_DIR } from '../../appDir';
 
 /**
  * Loads `registry.ts` and `state/Node.ts` once at build start, so a bad `functions/**\/*.ts`
@@ -25,12 +26,12 @@ export function checkFunctions(): Plugin {
           configFile: false as const,
           root,
           logLevel: 'silent' as const,
-          resolve: { alias: { '~': path.join(root, 'src') } },
+          resolve: { alias: { '~': APP_DIR } },
           // Render functions use JSX. They never run here, so any JSX runtime that loads will do.
           oxc: { jsx: { runtime: 'automatic' as const, importSource: 'solid-js/h' } },
         };
-        await runnerImport(path.join(root, 'src/lib/nodes/functions/registry.ts'), options);
-        await runnerImport(path.join(root, 'src/lib/nodes/state/Node.ts'), options);
+        await runnerImport(path.join(APP_DIR, 'lib/nodes/functions/registry.ts'), options);
+        await runnerImport(path.join(APP_DIR, 'lib/nodes/state/Node.ts'), options);
       } catch (e) {
         this.error((e as Error).message);
       }
