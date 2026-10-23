@@ -3,6 +3,10 @@
   "version": "0.2.0",
   "description": "A Markdown-based SSG for interactive science explainers. Create a site with: npx @tinyvolt/pie init my-site",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TinyVolt/pie-ssg.git"
+  },
   "exports": {
     "./vite": "./vite.ts"
   },
