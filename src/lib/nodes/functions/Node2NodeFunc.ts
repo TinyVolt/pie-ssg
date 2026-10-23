@@ -8,6 +8,11 @@ export interface ParameterDefinition {
   name: string;
   /** A list means any one of these types is accepted. */
   type: NodeType | NodeType[];
+  /**
+   * Makes the parameter optional: a left-out argument takes this value. `null`: a left-out argument
+   * makes no node, and `compute` gets `undefined`. Optional parameters come after the required ones.
+   */
+  defaultValue?: number | string | null;
 }
 
 export type BlueprintNode = any;
@@ -37,7 +42,10 @@ export interface SideEffectFunc {
   parameters: ParameterDefinition[];
   /** False: passing an array is an error instead of a loop over its items. Default true. */
   broadcastable?: boolean;
-  run: (inputs: AnyNode[], store: NodeStore) => void;
+  /** True: takes `animate`. Default false. */
+  animatable?: boolean;
+  /** The call waits for the returned promise, e.g. until an animation ends. */
+  run: (inputs: AnyNode[], store: NodeStore, animate: boolean) => void | Promise<void>;
 }
 
 type LocalMeta = {
@@ -131,7 +139,11 @@ export class NodeReconciler {
     return { hasMissingDependency };
   }
 
-  evaluate(func: Node2NodeFunc, inputNodeIds: string[], store: NodeStore, assignedId?: string) {
+  /**
+   * `hidden`, `fill` and `stroke` are set on every node the call makes: the main node and the others in the blueprint.
+   * An `undefined` input id is a left-out optional parameter: `compute` gets `undefined` for it.
+   */
+  evaluate(func: Node2NodeFunc, inputNodeIds: (string | undefined)[], store: NodeStore, assignedId?: string, hidden = false, fill?: string, stroke?: string) {
     createRoot((disposeRoot) => {
       const localToGlobal = new Map<string, LocalMeta>();
 
@@ -148,8 +160,8 @@ export class NodeReconciler {
       let blueprintInputs: AnyNode[] = [];
 
       const blueprintMemo = createMemo<Record<string, BlueprintNode> | null>((prev) => {
-        const inputs = inputNodeIds.map(id => store.getNodeValue(id));
-        if (inputs.some(node => !node || node.type === 'Dummy')) return null;
+        const inputs = inputNodeIds.map(id => id === undefined ? undefined : store.getNodeValue(id));
+        if (inputs.some((node, i) => inputNodeIds[i] !== undefined && (!node || node.type === 'Dummy'))) return null;
         try {
           const blueprint = computeBlueprint(func, inputs as AnyNode[]);
           blueprintInputs = inputs as AnyNode[];
@@ -173,7 +185,7 @@ export class NodeReconciler {
       }, null);
       firstRunDone = true;
 
-      this.reconcile(blueprintMemo, () => blueprintInputs, localToGlobal, func, assignedId, store, disposeRoot);
+      this.reconcile(blueprintMemo, () => blueprintInputs, localToGlobal, func, assignedId, hidden, fill, stroke, store, disposeRoot);
     }) // outer `createRoot` ends here
   }
 
@@ -183,6 +195,9 @@ export class NodeReconciler {
     localToGlobal: Map<string, LocalMeta>,
     func: Node2NodeFunc,
     assignedId: string | undefined,
+    hidden: boolean,
+    fill: string | undefined,
+    stroke: string | undefined,
     store: NodeStore,
     disposeRoot: () => void
   ) {
@@ -230,6 +245,9 @@ export class NodeReconciler {
                 const transformedData = {
                   ...data,
                   id: globalId,
+                  hidden,
+                  fill,
+                  stroke,
                   __graph_deps: {
                     funcKeyword: func.keyword,
                     inputNodes: inputsAccessor(),

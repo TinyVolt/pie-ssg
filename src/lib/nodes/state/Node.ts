@@ -10,11 +10,17 @@ import {
   renderBezierQuadratic,
   renderBezierCubic,
   renderPointGrad,
+  renderText,
 } from '../render/renderLogic';
 
 export interface Node {
   id: string;
   type: string;
+  hidden?: boolean;
+  /** A CSS color or 'none'. */
+  fill?: string;
+  /** A CSS color or 'none'. */
+  stroke?: string;
   __graph_deps?: {
     funcKeyword: string;
     inputNodes: AnyNode[];
@@ -22,6 +28,12 @@ export interface Node {
     // ID of the 'main' output node, set on a function's auxiliary nodes.
     parentId?: string;
   };
+}
+
+export function checkColor(keyword: string, name: string, value?: string) {
+  if (value !== undefined && value !== 'none' && !CSS.supports('color', value)) {
+    throw new Error(`${keyword}: ${name} '${value}' is not a valid color`);
+  }
 }
 
 export interface NodeDefinition<N extends Node = AnyNode> {
@@ -32,11 +44,21 @@ export interface NodeDefinition<N extends Node = AnyNode> {
   render?(node: Accessor<N>, unit: Accessor<number>): JSXElement | null;
 }
 
+/**
+ * Drawn only when it has both `x` and `y`, the center of its box.
+ * `w`, `h`: the box size in grid units. 0 and 0: one line, no box. Above 0: fixed. -1: fits the text, at most 5.
+ */
 export interface TextNode extends Node {
   type: 'Text';
   value: string;
+  x?: ScalarNode;
+  y?: ScalarNode;
+  /** In pixels. */
+  fontSize?: ScalarNode;
+  w?: ScalarNode;
+  h?: ScalarNode;
 }
-const TextDefinition: NodeDefinition<TextNode> = { type: 'Text', prefix: 'text' };
+const TextDefinition: NodeDefinition<TextNode> = { type: 'Text', prefix: 'text', render: renderText };
 
 export interface PointNode extends Node {
   type: 'Point';
@@ -181,4 +203,9 @@ for (const [file, defs] of definitionsByFile) {
 
 export function getNodeDefinition(type: string): NodeDefinition | undefined {
   return nodeDefinitions.get(type);
+}
+
+/** Every node type, built-in and the site's own. */
+export function getNodeTypes(): NodeType[] {
+  return [...nodeDefinitions.keys()] as NodeType[];
 }

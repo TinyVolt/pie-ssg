@@ -1,6 +1,7 @@
 import PIE_PY from './py/pie.py?raw';
 import PIE_MPL_PY from './py/pie_mpl.py?raw';
 import SHOW_FIGURES from './py/show_figures.py?raw';
+import type { CallOptions } from '~/lib/nodes/execute';
 
 const BASE = 'https://cdn.jsdelivr.net/pyodide/v0.28.2/full/';
 
@@ -15,14 +16,15 @@ const request = (message: object) =>
     postMessage({ ...message, reqId });
   });
 
-const call = (keyword: string, args: unknown[], out?: string) => request({ type: 'call', keyword, args, out });
+const call = (keyword: string, args: unknown[], options: CallOptions) =>
+  request({ type: 'call', keyword, args, options });
 
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
 
 /** First half of `g(a)` for `g = pie.lift(f, ...)`: the input values and the output id. */
-const lift = (name: string, inputIds: string[], kind: string, out?: string) =>
-  request({ type: 'lift', name, inputIds, kind, out });
+const lift = (name: string, inputIds: string[], kind: string, out?: string, fill?: string, stroke?: string) =>
+  request({ type: 'lift', name, inputIds, kind, out, fill, stroke });
 
 /** Second half of `g(a)`: the first result. Python doesn't wait for a reply. */
 const lift_save = (save: object) => postMessage({ type: 'lift_save', ...save });

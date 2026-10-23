@@ -1,3 +1,4 @@
+[fully written by an agent except this line]
 # pie-ssg site
 
 This folder is a site made with [pie-ssg](https://github.com/TinyVolt/pie-ssg): a Markdown-based static site generator for interactive science explainers. Pages are Markdown. Readers can run Python in the page and draw on a canvas.
@@ -22,9 +23,9 @@ npm run preview   # preview the build with vite
 | `styles/` | CSS. Every `.css` file here loads after the built-in styles, so it wins. |
 | `public/` | Static files, served as-is. |
 | `site.yml` | Site settings. |
-| `src/` | The pie-ssg app itself. |
+| `node_modules/@tinyvolt/pie/src/` | The pie-ssg app itself, installed as the `@tinyvolt/pie` package. `~/` in imports means this folder. |
 
-Do the work in the folders above. Edit `src/` only when the task can't be done from them.
+Do the work in the folders above. Don't edit `node_modules/@tinyvolt/pie/`: installing or updating the package replaces it.
 
 ## site.yml
 
@@ -52,7 +53,7 @@ Other keys are ignored. A bad value fails the build, and shows an error screen i
 
 Math uses KaTeX: `$…$` inline, and `$$…$$` on its own lines for a display block.
 
-A page's URL must not match a route in `src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
+A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/about`, `/pages`). For example, `pages/about.md` fails the build.
 
 ## Python editors
 
@@ -83,6 +84,12 @@ pie.scalar(3, out='r')   # the circle above now has radius 3
 
 Common mistake: `center = pie.point(1, 2)` does not give the node the id `center`. It gets an automatic id. Use `pie.point(1, 2, out='center')`.
 
+`fill='<color>'` and `stroke='<color>'` color a node, e.g. `pie.circle(a, r, fill='orange', stroke='#333')`:
+
+- A color is any CSS color (`'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error.
+- Every node the call makes gets the colors, including extra nodes such as the center point of `ellipse_from_foci`.
+- A node shows only the colors its render function draws with. A point uses only `fill`, a line only `stroke`. For `partial`'s arrow, `stroke` colors the line and `fill` the head.
+
 `unit` is a system node: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
 
 Built-in functions:
@@ -90,7 +97,7 @@ Built-in functions:
 | Call | Makes |
 | --- | --- |
 | `pie.scalar(value)` | a number |
-| `pie.text(value)` | a string |
+| `pie.text(value, x, y, font_size, w, h)` | a string; drawn centered at (x, y) only if both are given. All optional: `value` `''`, `font_size` 12 (pixels), `w` and `h` 0. `w`/`h`: 0 and 0 = one line, no box; above 0 = fixed size; -1 = fits the text, at most 5 |
 | `pie.point(x, y)` | a point |
 | `pie.line(p1, p2)` | a line |
 | `pie.distance(p1, p2)` | a number |
@@ -116,13 +123,19 @@ These change existing nodes instead of making a new one. They run once, when cal
 | `pie.translate_point_by(p, dx, dy)` | moves point `p` by (dx, dy) |
 | `pie.translate_scalar_to(s, value)` | sets scalar `s` to `value` |
 | `pie.translate_scalar_by(s, delta)` | adds `delta` to scalar `s` |
+| `pie.set_fill(node, color)` | sets `node`'s fill |
+| `pie.set_stroke(node, color)` | sets `node`'s stroke |
+| `pie.hide(node)` | stops drawing `node` |
+| `pie.show(node)` | draws a hidden `node` again |
+| `pie.remove(node)` | removes `node`; nodes built from it are removed too |
 
-- `p` or `s` can be an array: every item moves.
-- A moved node stops following the nodes it was built from. Nodes built from it follow the move.
+- `p`, `s` or `node` can be an array: every item changes.
+- A moved node stops following the nodes it was built from. Nodes built from it follow the move. A moved point keeps its colors.
+- The four `translate_*` calls take `animate=True`: the value moves to its new value over half a second instead of jumping. The call returns when the move ends, so a loop of animated calls plays one after another. An array's items move together. Other calls raise an error if passed `animate`.
 
 ### Lifting a Python function: `pie.lift`
 
-`pie.lift(f, out_type)` turns a plain Python function into one that takes nodes and returns a node. It reruns when its input nodes change. `out_type` is one of `pie.Scalar`, `pie.Point`, `pie.Array[pie.Scalar]`, `pie.Array[pie.Point]`.
+`pie.lift(f, out_type)` turns a plain Python function into one that takes nodes and returns a node. It reruns when its input nodes change. `out_type` is one of `pie.Scalar`, `pie.Point`, `pie.Text` (or `str`), `pie.Array[pie.Scalar]`, `pie.Array[pie.Point]`.
 
 ```python
 import numpy as np
@@ -131,6 +144,8 @@ n = pie.scalar(5, out='n')
 xs = linspace(0, n, 5)
 pie.point(xs, 0)          # 5 points from 0 to 5; set `n` again and they move
 ```
+
+A lifted function also takes `fill` and `stroke`, e.g. `linspace(0, n, 5, fill='red')`.
 
 Limits:
 
@@ -161,8 +176,8 @@ export const Midpoint: Node2NodeFunc = {
 
 - `compute` returns an object whose `main` entry is the output node. Other entries are extra nodes drawn alongside it.
 - Do the math with the helpers in `~/lib/nodes/jax` (`add`, `sub`, `mul`, `div`, `sqrt`, `sin`, `cos`, `atan2`, …), not plain JS operators. Wrap a node's number field in `ref(...)` before using it. These keep `pie.partial` working on your function.
-- Node types and their fields are in `src/lib/nodes/state/Node.ts`.
-- A file can also export a `SideEffectFunc` (same module as `Node2NodeFunc`): `keyword`, `parameters`, and `run(inputs, store)`, which changes the store instead of returning nodes. See `src/lib/nodes/functions/sideEffects.ts`.
+- Node types and their fields are in `node_modules/@tinyvolt/pie/src/lib/nodes/state/Node.ts`.
+- A file can also export a `SideEffectFunc` (same module as `Node2NodeFunc`): `keyword`, `parameters`, and `run(inputs, store)`, which changes the store instead of returning nodes. See `node_modules/@tinyvolt/pie/src/lib/nodes/functions/sideEffects.ts`.
 - A keyword used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Your own node types: `nodes/`
@@ -195,7 +210,8 @@ const renderSquare = (square: Accessor<SquareNode>) => {
       y={num(square().center.y) - side() / 2}
       width={side()}
       height={side()}
-      fill="none" stroke="currentColor" stroke-width={2} vector-effect="non-scaling-stroke"
+      fill={square().fill ?? 'none'} stroke={square().stroke ?? 'currentColor'}
+      stroke-width={2} vector-effect="non-scaling-stroke"
     />
   );
 };
@@ -207,9 +223,10 @@ export const Square: NodeDefinition<SquareNode> = { type: 'Square', prefix: 'sq'
 - `prefix`: the start of automatic ids: `sq` gives `sq0`, `sq1`, …. Default: the type name in lower case.
 - `render(node, unit)`: returns Solid SVG elements, in grid units. `node()` returns the node's current data. Call it inside the JSX attributes, so the drawing updates when the node changes. `unit` is pixels per grid unit: divide by it for a size that stays fixed on screen. Leave `render` out for a node that isn't drawn.
 - `num(...)` turns a node's number field into a plain JS number.
+- `node().fill` and `node().stroke` hold the colors set from Python, or `undefined`. Use them before your default, e.g. `fill={square().fill ?? 'none'}`. A render function that doesn't read them ignores them.
 - The `declare module` block is needed so that a `Node2NodeFunc` accepts the type in `outputType` and `parameters`.
 - Python makes a node of your type through a function in `functions/`. `functions/square.ts` adds `pie.square(center, side)`.
-- The built-in node types are in `src/lib/nodes/state/Node.ts`, and their render functions are in `src/lib/nodes/render/renderLogic.tsx`.
+- The built-in node types are in `node_modules/@tinyvolt/pie/src/lib/nodes/state/Node.ts`, and their render functions are in `node_modules/@tinyvolt/pie/src/lib/nodes/render/renderLogic.tsx`.
 - A type name used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Layouts: `layouts/`
@@ -228,7 +245,7 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 `npm run build` fails, with a message naming the file, when:
 
 - a page's frontmatter or `site.yml` has a bad line or value, or `site.yml` has no `title`
-- a page's URL matches a route in `src/routes/`
+- a page's URL matches a route in `node_modules/@tinyvolt/pie/src/routes/`
 - a `functions/` keyword is used twice
 - a `nodes/` type name is used twice
 - a `layouts/` file has no default export

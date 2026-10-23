@@ -24,6 +24,19 @@ All `Node2NodeFunc` type functions defined in `src/lib/nodes/functions` are avai
 **Caveat**
 A node is automatically specified an ID. To provide an ID to node, use `out=<id>`. Eg `pie.point(1,2,out='center')`. A common mistake is to write `center = pie.point(1,2)` and assume that the generated point has an ID of `center`. 
 
+### Colors
+Use `fill=<color>` and `stroke=<color>` to color a node. Eg `pie.circle(c, 2, fill='orange', stroke='#333')`. A color is any CSS color (eg `'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error. Also works for lifted functions (see `pie.lift` below) - they accept `fill` and `stroke` too.
+
+Every node a call makes gets the colors, including extra nodes such as the center point of `ellipse_from_foci`. 
+
+To change the colors later, use `pie.set_fill(node, color)` and `pie.set_stroke(node, color)`. `node` can be an array, in which case every item changes.
+
+### Removing
+Use `pie.remove(node)` to remove a node. Nodes built from it are removed too. If a list of nodes is passed, it removes each item in that list.
+
+### Animation
+`pie.translate_point_to`, `pie.translate_point_by`, `pie.translate_scalar_to` and `pie.translate_scalar_by` take `animate=True`. The value then moves to its new value over half a second instead of jumping. Eg `pie.translate_point_to(p, 3, 4, animate=True)`. The call returns when the move ends, so a loop of animated calls plays one after another. If `p` is an array, its items move together. Other functions raise an error if passed `animate`.
+
 ### Extending JS functions
 One can define their own `Node2NodeFunc` under `/functions` folder. It will automatically become available under `pie.*` in Python. Eg `/functions/midpoint.ts` implements `Midpoint` with keyword `midpoint`. In a Python editor, a user can type `pie.midpoint(p1, p2)` to draw a mid-point of points `p1` and `p2`. 
 
@@ -33,7 +46,7 @@ One can define their own `Node2NodeFunc` under `/functions` folder. It will auto
 One can define their own node types under `/nodes` folder. Each file exports one or more `NodeDefinition` objects with three props:
 - `type`: the node's type name, eg `Square`.
 - `prefix`: the start of auto-generated IDs, eg `sq` gives `sq0`, `sq1`, ...
-- `render`: a function that draws the node on the canvas. Skip it for a node that is not drawn.
+- `render`: a function that draws the node on the canvas. Skip it for a node that is not drawn. To support colors, use `node().fill` and `node().stroke` before your defaults, eg `fill={square().fill ?? 'none'}`. Otherwise the node ignores them.
 
 Eg `/nodes/square.tsx` defines a `Square` node. Its `declare module` block adds `Square` to the node types, so a function can output it. `/functions/square.ts` implements it, so a user can type `pie.square(p, 2)` to draw a square of side `2` centered at point `p`.
 
@@ -42,7 +55,7 @@ Eg `/nodes/square.tsx` defines a `Square` node. Its `declare module` block adds 
 ## Calling in-built Python functions
 One can also lift a regular Python function to become a `Node2NodeFunc`-like function which accepts nodes as inputs and returns nodes as outputs using `pie.lift`. `pie.lift` takes two arguments:
 1. the function to lift, `f`
-2. the output node type - one of `pie.Scalar`, `pie.Point`, `pie.Array[pie.Scalar]` or `pie.Array[pie.Point]`. 
+2. the output node type - one of `pie.Scalar`, `pie.Point`, `pie.Text` (or `str`), `pie.Array[pie.Scalar]` or `pie.Array[pie.Point]`. 
 
 ```python
 import numpy as np 

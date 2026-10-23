@@ -23,7 +23,7 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     for (const nodeSignal of Object.values(props.store.nodes)) {
       if (!nodeSignal) continue;
       const node = nodeSignal.signal();
-      if (!node || node.type === 'Dummy') continue;
+      if (!node || node.type === 'Dummy' || node.hidden) continue;
       if (node.type === 'Point') points.push(nodeSignal);
       else geometry.push(nodeSignal);
     }
@@ -36,6 +36,8 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
     const type = createMemo(() => node()?.type);
     return (
       <g data-node-id={node()?.id}>
+        {/* The browser shows the `<title>` as a tooltip when hovering any shape in the group. */}
+        <title>{node()?.id}</title>
         {type() && (getNodeDefinition(type()!)?.render?.(node, props.store.unit) ?? null)}
       </g>
     );

@@ -2,7 +2,7 @@
 
 # pie-ssg
 
-[![npm](https://img.shields.io/npm/v/@tinyvolt/create-pie)](https://www.npmjs.com/package/@tinyvolt/create-pie)
+[![npm](https://img.shields.io/npm/v/@tinyvolt/pie)](https://www.npmjs.com/package/@tinyvolt/pie)
 [![license](https://img.shields.io/github/license/TinyVolt/pie-ssg)](LICENSE)
 
 A Markdown-based SSG for interactive science explainers
@@ -12,7 +12,7 @@ See the [roadmap](ROADMAP.md) for planned features and [documentation](DOCS.md) 
 ## Create a site
 
 ```sh
-npm create @tinyvolt/pie my-site
+npx @tinyvolt/pie init my-site
 cd my-site
 npm install
 npm run dev
@@ -21,13 +21,21 @@ npm run dev
 With pnpm:
 
 ```sh
-pnpm create @tinyvolt/pie my-site
+pnpx @tinyvolt/pie init my-site
 cd my-site
 pnpm install
 pnpm dev
 ```
 
-Requires Node 24. Package: [@tinyvolt/create-pie](https://www.npmjs.com/package/@tinyvolt/create-pie).
+Leave out `my-site` and it asks for a folder name. The folder must not exist yet, or be empty.
+
+The site installs the app as the `@tinyvolt/pie` package. To update it:
+
+```sh
+npm install @tinyvolt/pie@latest
+```
+
+Requires Node 24. Package: [@tinyvolt/pie](https://www.npmjs.com/package/@tinyvolt/pie).
 
 ## Developing pie-ssg
 

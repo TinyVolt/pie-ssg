@@ -2,7 +2,7 @@ import { batch, createMemo, createRoot } from 'solid-js';
 import { getFunction, getSideEffect } from './functions/registry';
 import { NodeReconciler, ParameterDefinition } from './functions/Node2NodeFunc';
 import { NodeStore } from './state/NodeStore';
-import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode } from './state/Node';
+import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode, checkColor } from './state/Node';
 import { scalar } from './jax';
 import { leaves, listItemType, listShape, sha256 } from './tensors/tensor';
 import { broadcastItems, broadcastShapes, isBroadcast } from './tensors/broadcast';
@@ -89,22 +89,37 @@ export function checkOut(keyword: string, out: unknown, args: Arg[]) {
   }
 }
 
-/** `out` is the id for the output node. Without it the id is generated. */
-export async function execute(store: NodeStore, keyword: string, args: Arg[], out?: string): Promise<ExecuteResult> {
+/** The keyword arguments of a Python call. */
+export interface CallOptions {
+  /** The id for the output node. Without it the id is generated. */
+  out?: string;
+  hidden?: boolean;
+  fill?: string;
+  stroke?: string;
+  /** Only for `animatable` side effects: numbers move to their new values instead of jumping. */
+  animate?: boolean;
+}
+
+export async function execute(store: NodeStore, keyword: string, args: Arg[], { out, hidden, fill, stroke, animate }: CallOptions = {}): Promise<ExecuteResult> {
   const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
   }
 
-  const expected = func.parameters.length;
-  if (args.length !== expected) {
+  const total = func.parameters.length;
+  const required = func.parameters.filter(p => p.defaultValue === undefined).length;
+  if (args.length < required || args.length > total) {
     const names = func.parameters.map((p: ParameterDefinition) => p.name).join(', ');
-    throw new Error(`${keyword} needs exactly ${expected} argument${expected === 1 ? '' : 's'} (${names}), got ${args.length}`);
+    const count = required === total ? `exactly ${total}` : `${required} to ${total}`;
+    throw new Error(`${keyword} needs ${count} argument${total === 1 ? '' : 's'} (${names}), got ${args.length}`);
   }
+  // Left-out arguments take their defaults. A null default makes no node: `compute` gets undefined.
+  const allArgs = func.parameters.map((p, i) => (i < args.length ? args[i] : p.defaultValue!));
 
   // Check every type and shape first, so a bad call leaves no literal nodes behind.
   const broadcastInputShapes: number[][] = [];
-  args.forEach((arg, i) => {
+  allArgs.forEach((arg, i) => {
+    if (arg === null) return;
     const param = func.parameters[i];
     const types = Array.isArray(param.type) ? param.type : [param.type];
     let got = argType(arg, store);
@@ -123,22 +138,27 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], ou
   if (broadcastInputShapes.length > 0) broadcastShapes(broadcastInputShapes);
 
   checkOut(keyword, out, args);
+  if ('run' in func && hidden !== undefined) throw new Error(`${keyword} does not take hidden`);
+  if ('run' in func && fill !== undefined) throw new Error(`${keyword} does not take fill`);
+  if ('run' in func && stroke !== undefined) throw new Error(`${keyword} does not take stroke`);
+  if (animate !== undefined && !('run' in func && func.animatable)) throw new Error(`${keyword} does not take animate`);
+  checkColor(keyword, 'fill', fill);
+  checkColor(keyword, 'stroke', stroke);
 
-  const inputNodeIds = await Promise.all(args.map(arg => resolveArg(arg, store)));
+  const inputNodeIds = await Promise.all(allArgs.map(arg => (arg === null ? undefined : resolveArg(arg, store))));
+  const inputs = () => inputNodeIds.map(id => (id === undefined ? undefined : store.getNodeValue(id)!) as AnyNode);
 
   if ('run' in func) {
-    const inputs = inputNodeIds.map(id => store.getNodeValue(id)!);
-    batch(() => {
-      for (const itemInputs of broadcastItems(func.parameters, inputs)) func.run(itemInputs, store);
-    });
+    const runs = batch(() => broadcastItems(func.parameters, inputs()).map(itemInputs => func.run(itemInputs, store, animate ?? false)));
+    await Promise.all(runs);
     return { id: '', type: 'Dummy' };
   }
 
   const outputType = broadcastInputShapes.length > 0
     ? 'Array'
-    : func.resolveOutputType?.(inputNodeIds.map(id => store.getNodeValue(id)!)) ?? func.outputType;
+    : func.resolveOutputType?.(inputs()) ?? func.outputType;
   const id = out ?? store.nameGenerator.generateAutoName(store.nameGenerator.getPrefixForType(outputType));
-  new NodeReconciler().evaluate(func, inputNodeIds, store, id);
+  new NodeReconciler().evaluate(func, inputNodeIds, store, id, hidden, fill, stroke);
 
   const node = store.getNodeValue(id);
   if (node?.type === 'Array') return { id, type: node.type, shape: node.shape, itemType: node.itemType };

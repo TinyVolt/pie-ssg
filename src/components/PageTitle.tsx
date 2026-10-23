@@ -1,5 +1,5 @@
 import { Title } from "@solidjs/meta";
-import site from "../../site.yml";
+import site from "/site.yml";
 
 /** Sets the browser tab title to "<page> – <site title>", or the site title alone when no page title is given. */
 export function PageTitle(props: { children?: string }) {
