@@ -5,7 +5,10 @@ Use the frontmatter `canvas` prop to add a canvas to the page. Accepted values a
 
 Each element on the canvas is a `Node`. Each `Node` has an `id`. 
 
-`unit` is a system node: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
+There are three system nodes:
+- `unit`: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
+- `gridOpacity`: a scalar that multiplies the opacity of the grid lines and axes (default 1; 0 hides them), e.g. `pie.scalar(0.5, out='gridOpacity')`.
+- `canvasColor`: a text holding a CSS color for the canvas background (default `''`: no background), e.g. `pie.text('#111', out='canvasColor')`.
 
 ---
 

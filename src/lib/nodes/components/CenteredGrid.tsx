@@ -1,4 +1,4 @@
-import { JSX, createMemo } from 'solid-js';
+import { JSX, createMemo, Show } from 'solid-js';
 import { MIN_GRID_UNIT } from '../state/NodeStore';
 
 interface CenteredGridProps {
@@ -7,6 +7,10 @@ interface CenteredGridProps {
   height: number;
   /** Pixels per grid unit. */
   unit: number;
+  /** Opacity multiplier for the grid lines and axes (0 hides them). Defaults to 1. */
+  gridOpacity?: number;
+  /** Solid fill painted behind the grid. Defaults to transparent (no rect). */
+  backgroundColor?: string;
   children: JSX.Element;
 }
 
@@ -52,7 +56,16 @@ export function CenteredGrid(props: CenteredGridProps) {
 
   return (
     <g transform={`translate(${originX()}, ${originY()}) scale(1, -1)`}>
-      {gridLines()}
+      <Show when={props.backgroundColor}>
+        <rect
+          x={extents().xLeft}
+          y={extents().yBottom}
+          width={props.width}
+          height={props.height}
+          fill={props.backgroundColor}
+        />
+      </Show>
+      <g opacity={props.gridOpacity ?? 1}>{gridLines()}</g>
       {props.children}
     </g>
   );

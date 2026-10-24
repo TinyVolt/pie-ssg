@@ -1,6 +1,6 @@
 import { Accessor, batch, createMemo, createRoot, createSignal, untrack } from 'solid-js';
 import { createStore, reconcile } from 'solid-js/store';
-import { AnyNode, ScalarNode } from './Node';
+import { AnyNode, ScalarNode, TextNode } from './Node';
 import { NameGenerator } from './NameGenerator';
 import { num, scalar } from '../jax';
 
@@ -22,6 +22,10 @@ export class NodeStore {
 
   /** Pixels per grid unit, read from the `unit` node. */
   public unit!: Accessor<number>;
+  /** Opacity multiplier for the grid lines and axes, read from the `gridOpacity` node. */
+  public gridOpacity!: Accessor<number>;
+  /** Canvas background color, read from the `canvasColor` node. `undefined` when empty: no background. */
+  public canvasColor!: Accessor<string | undefined>;
 
   public nameGenerator: NameGenerator;
 
@@ -41,6 +45,16 @@ export class NodeStore {
         // max(1, ...): a zero, negative or NaN unit would break the viewBox.
         return node ? Math.max(1, num(node.value)) : 50;
       });
+
+      this.gridOpacity = createMemo(() => {
+        const node = this.nodes['gridOpacity']?.signal() as ScalarNode | undefined;
+        return node ? num(node.value) : 1;
+      });
+
+      this.canvasColor = createMemo(() => {
+        const node = this.nodes['canvasColor']?.signal() as TextNode | undefined;
+        return node?.value?.trim() || undefined;
+      });
     });
 
     // untrack: names are generated inside reactive computations, which must not rerun when the checked node changes.
@@ -54,6 +68,18 @@ export class NodeStore {
     createRoot((dispose) => {
       const signal = createMemo(() => ({ id: unitId, type: 'Scalar', value: scalar(50) } as ScalarNode));
       this.saveNode(unitId, signal, dispose);
+    });
+
+    const gridOpacityId = 'gridOpacity';
+    createRoot((dispose) => {
+      const signal = createMemo(() => ({ id: gridOpacityId, type: 'Scalar', value: scalar(1) } as ScalarNode));
+      this.saveNode(gridOpacityId, signal, dispose);
+    });
+
+    const canvasColorId = 'canvasColor';
+    createRoot((dispose) => {
+      const signal = createMemo(() => ({ id: canvasColorId, type: 'Text', value: '' } as TextNode));
+      this.saveNode(canvasColorId, signal, dispose);
     });
   }
 
