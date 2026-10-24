@@ -86,7 +86,7 @@ def _call(name, args, **options):
     _check_bridge()
     js_args = to_js([_arg(a) for a in args], dict_converter=Object.fromEntries)
     js_options = to_js({k: v for k, v in options.items() if v is not None}, dict_converter=Object.fromEntries)
-    return _node(run_sync(bridge.call(name, js_args, js_options)))
+    return _node(_wait(bridge.call(name, js_args, js_options)))
 
 # Above 0 while a function passed to `pie.lift` runs. It can't reach the page: a rerun runs outside any block.
 _lift_depth = 0
@@ -161,6 +161,29 @@ def _rerun(scope, node_id, values):
         raise RuntimeError("Python was restarted, so this node can't rerun. Run the block that made it again.")
     shape, values = _evaluate(scope, call, values)
     return {"shape": shape, "values": values}
+
+# The running block's globals. The worker sets it before each run, so a batch can find lifted functions.
+_scope = None
+
+def _wait(request):
+    """
+    Waits for the page's reply to `request`. Before an animation, the reply can be a batch instead: the lifted
+    functions to run for its steps. Then runs them, sends the results, and waits for the next reply.
+    """
+    reply = run_sync(request)
+    while (batch := getattr(reply, "batch", None)) is not None:
+        reply = run_sync(bridge.batch_done(to_js(_run_batch(batch), dict_converter=Object.fromEntries)))
+    return reply
+
+def _run_batch(batch):
+    """Each job's lifted function, once per entry of its inputs. A failure gives {"error": message} for that entry."""
+    return [[_try_rerun(job.nodeId, values) for values in job.inputs.to_py()] for job in batch]
+
+def _try_rerun(node_id, values):
+    try:
+        return _rerun(_scope, node_id, values)
+    except Exception as e:
+        return {"error": f"{type(e).__name__}: {e}"}
 
 def _evaluate(scope, call, values):
     """Calls the function: by name, the one now named so in `scope`; otherwise the one kept."""

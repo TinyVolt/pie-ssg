@@ -6,6 +6,7 @@ import { AnyNode, ArrayNode, NodeType, ScalarNode, TextNode, checkColor } from '
 import { scalar } from './jax';
 import { leaves, listItemType, listShape, sha256 } from './tensors/tensor';
 import { broadcastItems, broadcastShapes, isBroadcast } from './tensors/broadcast';
+import { play, type Prepare, type Track } from './animation';
 
 /** One argument of a Python call: a number, a string, a handle to an existing node, or a nested list of these. */
 export type Arg = number | string | { id: string } | Arg[];
@@ -100,7 +101,8 @@ export interface CallOptions {
   animate?: boolean;
 }
 
-export async function execute(store: NodeStore, keyword: string, args: Arg[], { out, hidden, fill, stroke, animate }: CallOptions = {}): Promise<ExecuteResult> {
+/** `prepare`: runs before an animation the call starts plays. */
+export async function execute(store: NodeStore, keyword: string, args: Arg[], { out, hidden, fill, stroke, animate }: CallOptions = {}, prepare?: Prepare): Promise<ExecuteResult> {
   const func = getFunction(keyword) ?? getSideEffect(keyword);
   if (!func) {
     throw new Error(`Unknown function: ${keyword}`);
@@ -150,7 +152,8 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], { 
 
   if ('run' in func) {
     const runs = batch(() => broadcastItems(func.parameters, inputs()).map(itemInputs => func.run(itemInputs, store, animate ?? false)));
-    await Promise.all(runs);
+    const tracks = runs.filter((run): run is Track => run !== undefined);
+    if (tracks.length > 0) await play(tracks, prepare);
     return { id: '', type: 'Dummy' };
   }
 
