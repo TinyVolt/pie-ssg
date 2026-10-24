@@ -3,6 +3,7 @@ import { batch, createComputed, createMemo, createRoot, onCleanup } from 'solid-
 import { AnyNode } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
 import { computeBlueprint } from '../tensors/broadcast';
+import type { Track } from '../animation';
 
 export interface ParameterDefinition {
   name: string;
@@ -44,8 +45,8 @@ export interface SideEffectFunc {
   broadcastable?: boolean;
   /** True: takes `animate`. Default false. */
   animatable?: boolean;
-  /** The call waits for the returned promise, e.g. until an animation ends. */
-  run: (inputs: AnyNode[], store: NodeStore, animate: boolean) => void | Promise<void>;
+  /** An animated change returns its track. The call waits until it has played. */
+  run: (inputs: AnyNode[], store: NodeStore, animate: boolean) => void | Track;
 }
 
 type LocalMeta = {

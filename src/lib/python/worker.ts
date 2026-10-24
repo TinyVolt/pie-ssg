@@ -29,13 +29,16 @@ const lift = (name: string, inputIds: string[], kind: string, out?: string, fill
 /** Second half of `g(a)`: the first result. Python doesn't wait for a reply. */
 const lift_save = (save: object) => postMessage({ type: 'lift_save', ...save });
 
+/** Results of a batch the page asked for in a reply, before an animation. Waits for the call's next reply. */
+const batch_done = (results: unknown) => request({ type: 'batch_done', results });
+
 const ready = (async () => {
   const { loadPyodide } = await import(/* @vite-ignore */ `${BASE}pyodide.mjs`);
   const py = await loadPyodide({ indexURL: BASE, env: { MPLBACKEND: 'module://pie_mpl' } });
   py.setStdout({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.registerJsModule('bridge', {
-    call, item, lift, lift_save, plot: (png: string) => postMessage({ type: 'plot', png }),
+    call, item, lift, lift_save, batch_done, plot: (png: string) => postMessage({ type: 'plot', png }),
   });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
   py.FS.writeFile('/home/pyodide/pie_mpl.py', PIE_MPL_PY);
@@ -65,6 +68,10 @@ self.onmessage = async ({ data }) => {
         py.runPython('import pie', { globals });
         scopes.set(data.scope, globals);
       }
+      // A batch finds lifted functions in the running block's globals.
+      const pie = py.pyimport('pie');
+      pie._scope = globals;
+      pie.destroy();
       // Downloads packages the code imports (numpy, scipy, matplotlib, ...) on first use.
       await py.loadPackagesFromImports(data.code);
       try {

@@ -128,6 +128,22 @@ main pre code {
   background: none;
 }
 
+/* ```python tokens. Same colors as the editor's default theme. */
+.tok-keyword { color: #708; }
+.tok-atom, .tok-bool { color: #219; }
+.tok-literal, .tok-number { color: #164; }
+.tok-string { color: #a11; }
+.tok-string2 { color: #e40; }
+.tok-variableName.tok-definition { color: #00f; }
+.tok-variableName.tok-local { color: #30a; }
+.tok-typeName, .tok-namespace { color: #085; }
+.tok-className { color: #167; }
+.tok-variableName2, .tok-macroName { color: #256; }
+.tok-propertyName.tok-definition { color: #00c; }
+.tok-comment { color: #940; }
+.tok-meta { color: #404740; }
+.tok-invalid { color: #f00; }
+
 main table {
   border-collapse: collapse;
 }

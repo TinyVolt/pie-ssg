@@ -46,7 +46,13 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
   return (
     <div class="node-canvas" ref={svgContainerRef}>
       <svg viewBox={`0 0 ${viewWidth()} ${viewHeight()}`}>
-        <CenteredGrid width={viewWidth()} height={viewHeight()} unit={props.store.unit()}>
+        <CenteredGrid
+          width={viewWidth()}
+          height={viewHeight()}
+          unit={props.store.unit()}
+          gridOpacity={props.store.gridOpacity()}
+          backgroundColor={props.store.canvasColor()}
+        >
           {/* Step 1: Draw non-`Point` nodes first */}
           <For each={layers().geometry}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
           {/* Step 2: Draw `Point` nodes above geometry */}

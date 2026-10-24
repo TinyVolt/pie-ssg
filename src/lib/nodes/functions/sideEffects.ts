@@ -3,46 +3,35 @@ import { SideEffectFunc } from './Node2NodeFunc';
 import { AnyNode, PointNode, ScalarNode, TextNode, checkColor, getNodeTypes } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
 import { Dtype, add, num, ref, scalar } from '../jax';
-
-/** How long an animated change takes. */
-const ANIMATION_MS = 500;
-
-/** Slow at the start and end, fast in the middle. `t` and the result go from 0 to 1. */
-const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - 2 * (1 - t) ** 2);
+import type { Track } from '../animation';
 
 /**
  * Saves `node` with `changes`, new values for some of its numbers, in place of `node`.
  * It has no inputs, so it no longer follows the old node's.
- * With `animate`, the numbers move to their new values over `ANIMATION_MS` instead of jumping.
- * Resolves when they arrive, or when the node is replaced or removed first.
+ * With `animate`, returns a track that moves the numbers from their old values to the new ones.
  */
-function replaceNode<N extends AnyNode>(store: NodeStore, node: N, changes: Partial<N>, animate: boolean): Promise<void> {
+function replaceNode<N extends AnyNode>(store: NodeStore, node: N, changes: Partial<N>, animate: boolean): Track | undefined {
   const { __graph_deps, ...unchanged } = node;
   const end = { ...unchanged, ...changes } as AnyNode;
   if (!animate) {
     createRoot((dispose) => store.saveNode(node.id, createMemo(() => end), dispose));
-    return Promise.resolve();
+    return;
   }
 
   // [key, start, end] for each changed number.
   const moves = Object.entries(changes).map(([key, value]) => [key, num(node[key as keyof N] as Dtype), num(value)] as const);
   const at = (t: number) => ({ ...end, ...Object.fromEntries(moves.map(([key, a, b]) => [key, scalar(a + (b - a) * t)])) } as AnyNode);
 
-  return new Promise((resolve) => createRoot((dispose) => {
-    const start = performance.now();
+  return createRoot((dispose) => {
     const [progress, setProgress] = createSignal(0);
-    store.saveNode(node.id, createMemo(() => (progress() < 1 ? at(easeInOut(progress())) : end)), dispose);
-    let frame = requestAnimationFrame(function step() {
-      setProgress(Math.min((performance.now() - start) / ANIMATION_MS, 1));
-      if (progress() < 1) frame = requestAnimationFrame(step);
-      else resolve();
-    });
-    // Another change to this node, or `clear`, disposes this one: stop moving and let the call return.
+    let stopped = false;
+    store.saveNode(node.id, createMemo(() => (progress() < 1 ? at(progress()) : end)), dispose);
+    // Another change to this node, or `clear`, disposes this one: it stops moving.
     onCleanup(() => {
-      cancelAnimationFrame(frame);
-      resolve();
+      stopped = true;
     });
-  }));
+    return { seek: setProgress, stopped: () => stopped };
+  });
 }
 
 // Any node, but not a whole Array: an Array is looped over, so each item is hidden or shown.

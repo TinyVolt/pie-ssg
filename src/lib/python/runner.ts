@@ -1,7 +1,7 @@
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { execute } from '~/lib/nodes/execute';
 import { getItem } from '~/lib/nodes/tensors/tensor';
-import { saveLift, startLift, type InputValue, type PyResult } from './lift';
+import { prepareLifts, saveLift, startLift, type BatchJob, type BatchResult, type InputValue, type PyResult } from './lift';
 
 export type RunStatus = 'waiting' | 'loading' | 'running' | 'finished' | 'stopped' | 'killed';
 
@@ -34,6 +34,9 @@ const waitingReruns = new Map<string, Rerun>();
 const sentReruns = new Map<number, Rerun>();
 let nextRerunId = 0;
 
+// Set while a `pie.*` call waits for Python to run a batch: takes Python's results and the id of its request.
+let batchDone: ((reqId: number, results: BatchResult[][]) => void) | undefined;
+
 const message = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
 function onMessage(this: Worker, { data }: MessageEvent) {
@@ -43,9 +46,11 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     run?.onStatus('running');
   }
   if (data.type === 'call' || data.type === 'item' || data.type === 'lift') {
+    // The request to answer: this one, or, after a batch, Python's request with the batch's results.
+    let reqId: number = data.reqId;
     // A reply from before a kill must not reach the new worker.
     const reply = (msg: { result?: unknown; error?: string }) => {
-      if (worker === this) this.postMessage({ type: 'reply', reqId: data.reqId, ...msg });
+      if (worker === this) this.postMessage({ type: 'reply', reqId, ...msg });
     };
     const store = run?.scope.store;
     if (!store) {
@@ -68,10 +73,23 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       }
       return;
     }
-    execute(store, data.keyword, data.args, data.options).then(
+    // Python runs a batch inside this call: the reply asks for it, and Python sends the results back as a new request.
+    const runBatch = (jobs: BatchJob[]) => new Promise<BatchResult[][]>((resolve) => {
+      batchDone = (next, results) => {
+        reqId = next;
+        resolve(results);
+      };
+      reply({ result: { batch: jobs } });
+    });
+    execute(store, data.keyword, data.args, data.options, (visitSteps) => prepareLifts(visitSteps, runBatch)).then(
       (result) => reply({ result }),
       (err) => reply({ error: message(err) }),
     );
+  }
+  if (data.type === 'batch_done') {
+    const done = batchDone;
+    batchDone = undefined;
+    done?.(data.reqId, data.results);
   }
   // No reply: Python doesn't wait for it.
   if (data.type === 'lift_save') {
@@ -142,6 +160,7 @@ function killWorker() {
   loaded = false;
   // Their replies will never come.
   sentReruns.clear();
+  batchDone = undefined;
 }
 
 /** Kills Python. The running run and every queued run end as killed. */
