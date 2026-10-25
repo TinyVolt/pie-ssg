@@ -30,7 +30,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "postinstall": "node init/postinstall.js"
   },
   "dependencies": {
     "@codemirror/lang-python": "6.2.1",
