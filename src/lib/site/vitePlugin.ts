@@ -1,5 +1,6 @@
 import path from 'node:path';
 import type { Plugin } from 'vite';
+import { FEATURE_FIELDS } from '../markdown/features/build';
 import { parseKeyValues, readFields, text, type Field, type Values } from '../markdown/frontmatter';
 
 /** An `http://` or `https://` address, without a trailing `/`. */
@@ -21,6 +22,8 @@ const FIELDS = {
   url: address(),
   /** The search-result description of a page that has no `description` of its own. */
   description: text(''),
+  /** Each feature's frontmatter key, as the value of pages that leave it out. Paths are relative to the project root. */
+  ...FEATURE_FIELDS,
 };
 
 export type Site = Values<typeof FIELDS>;

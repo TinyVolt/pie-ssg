@@ -23,6 +23,17 @@ export function text(fallback: string): Field<string> {
   return { default: fallback, parse: raw => raw };
 }
 
+/** A path to a `.md` file, or `none`. Empty when absent. */
+export function markdownFile(): Field<string> {
+  return {
+    default: '',
+    parse(raw) {
+      if (raw !== 'none' && !raw.endsWith('.md')) throw new Error(`must be a .md file or none, got ${JSON.stringify(raw)}`);
+      return raw;
+    },
+  };
+}
+
 /** Every frontmatter field a page can set. Keys not listed here are ignored. */
 const FIELDS = {
   canvas: oneOf(['left', 'right', 'top', 'bottom', 'none'], 'none'),
@@ -72,11 +83,14 @@ function splitFrontmatter(markdown: string): { raw: Record<string, string>; body
   return { raw: parseKeyValues(match[1]), body: markdown.slice(match[0].length) };
 }
 
-/** Reads the frontmatter of the file at `path`. Throws, naming `path`, on a malformed block or a bad value. */
-export function parseFrontmatter(path: string, markdown: string): { frontmatter: Frontmatter; body: string } {
+/**
+ * Reads the frontmatter of the file at `path`. `raw`: every key it sets, unchecked, for the features to read.
+ * Throws, naming `path`, on a malformed block or a bad value.
+ */
+export function parseFrontmatter(path: string, markdown: string): { frontmatter: Frontmatter; raw: Record<string, string>; body: string } {
   try {
     const { raw, body } = splitFrontmatter(markdown);
-    return { frontmatter: readFields(FIELDS, raw), body };
+    return { frontmatter: readFields(FIELDS, raw), raw, body };
   } catch (e) {
     throw new Error(`${path}: ${(e as Error).message}`);
   }

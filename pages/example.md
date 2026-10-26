@@ -1,5 +1,6 @@
 ---
 canvas: none
+sidebar: _topics.md
 ---
 
 # Example

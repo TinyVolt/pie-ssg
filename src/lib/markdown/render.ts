@@ -1,5 +1,5 @@
 import katex from 'katex';
-import { Marked, Renderer } from 'marked';
+import { Marked, Renderer, type MarkedExtension } from 'marked';
 import { pythonLanguage } from '@codemirror/lang-python';
 import { classHighlighter, highlightCode } from '@lezer/highlight';
 
@@ -28,7 +28,7 @@ function highlightPython(code: string): string {
   return html;
 }
 
-const marked = new Marked({
+const BASE: MarkedExtension = {
   extensions: [
     {
       // `$$…$$` that fills its own lines.
@@ -83,8 +83,12 @@ const marked = new Marked({
       return new Renderer().code(token).replace('<code ', '<code data-collapsed ');
     },
   },
-});
+};
 
-export function renderMarkdown(markdown: string): string {
-  return marked.parse(markdown) as string;
+const marked = new Marked(BASE);
+
+/** `extensions`: markdown syntax the page's features add. */
+export function renderMarkdown(markdown: string, extensions: MarkedExtension[] = []): string {
+  const parser = extensions.length === 0 ? marked : new Marked(BASE, ...extensions);
+  return parser.parse(markdown) as string;
 }

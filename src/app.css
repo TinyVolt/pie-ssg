@@ -269,6 +269,96 @@ main .katex-display {
   height: 100%;
 }
 
+/* A page with a sidebar: the sidebar, a line with its button, then the page. */
+.sidebar-page {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Collapsed: hidden with CSS so its editors keep their code. Open: stays in view while the page scrolls. */
+.sidebar {
+  display: none;
+  flex: 0 0 var(--sidebar-width, 16rem);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100dvh;
+  overflow-y: auto;
+}
+
+.sidebar-page--open .sidebar {
+  display: block;
+}
+
+/* A canvas page doesn't scroll, so the sidebar fills its height and scrolls on its own. */
+#app:has(.canvas-page) .sidebar {
+  align-self: stretch;
+  max-height: none;
+}
+
+.sidebar-text {
+  padding: 1rem 1.25rem 2rem;
+}
+
+.sidebar-edge {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 1px;
+  background: var(--color-border, #ddd);
+}
+
+.sidebar-toggle {
+  position: sticky;
+  top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 50%;
+  color: var(--color-subtle, #666);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  color: var(--color-hover, #000);
+  border-color: var(--color-border-hover, #999);
+}
+
+/* Fills the rest; a canvas page inside fills its height. */
+.sidebar-page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Narrow screens: the open sidebar covers the page, over a dimmed backdrop. */
+.sidebar-page--drawer .sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: min(var(--sidebar-width, 16rem), 85vw);
+  max-height: none;
+  background: var(--color-bg, #fff);
+  box-shadow: 0 0 1rem rgb(0 0 0 / 0.2);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: var(--color-backdrop, rgb(0 0 0 / 0.3));
+}
+
 /* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
 pre:has(> code.language-python-editor) {
   visibility: hidden;
