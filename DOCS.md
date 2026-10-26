@@ -78,6 +78,27 @@ Now the points are regularly spaced between `0` and `3`.
 
 ---
 
+## Sidebar
+Use the frontmatter `sidebar` prop to show a markdown file in a collapsible sidebar on the left, eg `sidebar: _topics.md`. The file is rendered like any other page, but its frontmatter is ignored.
+
+To give every page the same sidebar, set it in `site.yml`, eg `sidebar: pages/_topics.md` (relative to the project root). A page's own `sidebar` wins; `sidebar: none` turns it off for that page.
+
+A missing sidebar file, or one outside the project, fails the build.
+
+**Caveat**
+A markdown file whose name starts with `_`, eg `pages/_topics.md`, is not a page: it gets no URL and isn't listed in `/pages`.
+
+---
+
+## Table of contents
+Use `toc: true` in the frontmatter to add a table of contents of the page's `##` and `###` headings. 
+- It goes after the page's leading `#` title, or at the very start if there is none. 
+- Each `###` is nested under the `##` before it. 
+
+To turn it on for every page, set `toc: true` in `site.yml`. A page's `toc: false` turns it off for that page.
+
+---
+
 ## Styling
 Add or modify the existing style in `/styles` folder. Every `.css` file under the `/styles` folder is loaded after the built-in `src/app.css`, so its rules override the defaults. Change the CSS variables in `/styles/theme.css` (colors, fonts, text width), or add your own rules, eg `main h1 { color: crimson; }`.
 

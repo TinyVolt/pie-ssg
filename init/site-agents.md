@@ -16,7 +16,7 @@ npm run preview   # preview the build with vite
 
 | Folder / file | What it holds |
 | --- | --- |
-| `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. |
+| `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. A file whose name starts with `_`, e.g. `pages/_topics.md`, gets no URL; use it as a sidebar. |
 | `functions/` | Your own TypeScript functions, called from Python as `pie.<keyword>(...)`. |
 | `nodes/` | Your own node types: what a node holds and how it is drawn. |
 | `layouts/` | Optional overrides: `header.tsx` (top of every page) and `index.tsx` (homepage, `/`). |
@@ -34,10 +34,11 @@ Flat `key: value` lines. Values may be quoted. A key may appear only once.
 - `title` (required): shown in the header and in every browser tab title.
 - `url`: where the site is deployed, e.g. `https://example.com`. Needed for `sitemap.xml`, `robots.txt`, canonical links and `og:url`; without it the build skips them and warns.
 - `description`: shown in search results and link previews for a page with no `description` of its own.
+- `sidebar`, `toc`: the value for every page that doesn't set the key itself (see "Pages"). A `sidebar` path here is relative to the project root, e.g. `sidebar: pages/_topics.md`.
 
 ## Pages
 
-A page is a `.md` file under `pages/`. `/pages` lists every page.
+A page is a `.md` file under `pages/`. `/pages` lists every page. A file whose name starts with `_` is not a page: it gets no URL and isn't listed.
 
 Optional frontmatter at the very top, as flat `key: value` lines:
 
@@ -51,6 +52,11 @@ canvas: left
 - `title`: the tab title. Empty means the tab shows the site title alone.
 - `description`: shown in search results and link previews. Empty means `site.yml`'s `description`.
 - `canvas`: `left`, `right`, `top`, `bottom` or `none` (default). Adds a canvas on that side of the page.
+- `sidebar`: a `.md` file shown in a collapsible sidebar on the left, e.g. `sidebar: _topics.md`. The path is relative to the page's file. `none`: no sidebar, even when `site.yml` sets one. Left out: `site.yml`'s `sidebar`.
+  - It starts collapsed. A button opens it, and the rest of the page shrinks to make room. A new page starts with it collapsed.
+  - On screens narrower than `--sidebar-drawer-below` (768px by default), it opens over the page instead. Tapping outside it or on one of its links closes it.
+  - Its frontmatter is ignored. Its Python editors share variables only with each other, and have no canvas: a `pie.*` call there raises "this page has no canvas".
+- `toc`: `true` or `false`. `true` adds a table of contents of the page's `##` and `###` headings, after its leading `#` title, or at the very start if it has none. Each `###` is nested under the `##` before it. Every heading gets an `id`, and duplicate headings get `-2`, `-3`, …. No list if the page has no `##` or `###`. Left out: `site.yml`'s `toc`, else `false`.
 
 Other keys are ignored. A bad value fails the build, and shows an error screen in dev.
 
@@ -71,7 +77,7 @@ pie.circle(a, r)
 ````
 
 - Python runs in the browser with Pyodide 0.28.2. `pie` is already imported.
-- All editors on one page share the same Python variables and the same canvas.
+- All editors on one page share the same Python variables and the same canvas. Editors in the page's sidebar are separate: see `sidebar` under "Pages".
 - `import numpy`, `scipy`, `matplotlib` and other [Pyodide packages](https://pyodide.org/en/0.28.2/usage/packages-in-pyodide.html) load on first use.
 - `plt.show()` shows matplotlib figures under the editor.
 - `` ```python-editor collapsed `` starts the editor collapsed: only its toolbar shows until the reader expands it. Other words after `python-editor` are ignored.
@@ -247,11 +253,15 @@ Each must `export default` a Solid component (Solid JSX: `class`, not `className
 
 Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or add rules, e.g. `main h1 { color: crimson; }`.
 
+- Sidebar: `--sidebar-width` (default `16rem`), `--sidebar-drawer-below` (default `768px`; narrower screens open it over the page) and `--color-backdrop` (behind it when it opens over the page). Its parts have the classes `.sidebar`, `.sidebar-text`, `.sidebar-edge`, `.sidebar-toggle` and `.sidebar-backdrop`.
+- Table of contents: `.toc`.
+
 ## Build checks
 
 `npm run build` fails, with a message naming the file, when:
 
 - a page's frontmatter or `site.yml` has a bad line or value, or `site.yml` has no `title`
+- a `sidebar` file doesn't exist or is outside the project
 - a page's URL matches a route in `node_modules/@tinyvolt/pie/src/routes/`
 - a `functions/` keyword is used twice
 - a `nodes/` type name is used twice
