@@ -8,11 +8,13 @@
  * - View half (`views.tsx`). Runs in the browser. A component that gets that data and wraps the page,
  *   e.g. draws the sidebar next to it.
  *
- * To add a feature: add its build half to `FEATURES` below, and its view to `VIEWS` in `views.tsx`.
+ * To add a feature: add its build half to `FEATURES` below, and its view, if it has one, to `VIEWS` in `views.tsx`.
+ * A feature that only changes the page's HTML, like `toc`, has no view.
  */
 import type { MarkedExtension } from 'marked';
 import type { Field } from '../frontmatter';
 import { sidebar } from './sidebar/build';
+import { toc } from './toc/build';
 
 /** The second argument to a feature's `build`. */
 export interface BuildContext {
@@ -34,14 +36,14 @@ export interface FeatureBuild<T, D> {
 }
 
 /** Keyed by frontmatter key. */
-const FEATURES = { sidebar };
+const FEATURES = { sidebar, toc };
 
 type DataOf<F> = F extends FeatureBuild<any, infer D> ? D : never;
 
-// Today: `{ sidebar?: string }`.
+// Today: `{ sidebar?: string; toc?: true }`.
 export type FeatureData = { [K in keyof typeof FEATURES]?: DataOf<(typeof FEATURES)[K]> };
 
-// Today: `{ sidebar: sidebar.field }`. `site.yml` reads these too.
+// Today: `{ sidebar: sidebar.field, toc: toc.field }`. `site.yml` reads these too.
 export const FEATURE_FIELDS = Object.fromEntries(
   Object.entries(FEATURES).map(([key, feature]) => [key, feature.field]),
 ) as { [K in keyof typeof FEATURES]: (typeof FEATURES)[K]['field'] };

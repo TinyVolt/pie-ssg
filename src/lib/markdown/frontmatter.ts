@@ -23,6 +23,17 @@ export function text(fallback: string): Field<string> {
   return { default: fallback, parse: raw => raw };
 }
 
+/** `true` or `false`. */
+export function boolean(fallback: boolean): Field<boolean> {
+  return {
+    default: fallback,
+    parse(raw) {
+      if (raw !== 'true' && raw !== 'false') throw new Error(`must be true or false, got ${JSON.stringify(raw)}`);
+      return raw === 'true';
+    },
+  };
+}
+
 /** A path to a `.md` file, or `none`. Empty when absent. */
 export function markdownFile(): Field<string> {
   return {

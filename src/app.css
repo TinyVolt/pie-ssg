@@ -359,6 +359,29 @@ main .katex-display {
   background: var(--color-backdrop, rgb(0 0 0 / 0.3));
 }
 
+/* `toc: true`: the table of contents, a box at the start of the page's text. */
+.toc {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+.toc ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.toc a {
+  text-decoration: none;
+}
+
+.toc a:hover {
+  color: var(--color-hover, #000);
+  text-decoration: underline;
+}
+
 /* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
 pre:has(> code.language-python-editor) {
   visibility: hidden;

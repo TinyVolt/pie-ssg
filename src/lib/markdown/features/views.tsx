@@ -6,8 +6,8 @@ import { SidebarView } from './sidebar/View';
 /** A feature's view: wraps the page, given the feature's data. */
 type FeatureView<D> = Component<{ data: D; children: JSX.Element }>;
 
-/** Every feature's view, by key, outermost first. */
-const VIEWS: { [K in keyof FeatureData]-?: FeatureView<NonNullable<FeatureData[K]>> } = {
+/** Every feature's view, by key, outermost first. A feature with no view, like `toc`, is left out. */
+const VIEWS: { [K in keyof FeatureData]: FeatureView<NonNullable<FeatureData[K]>> } = {
   sidebar: SidebarView,
 };
 
