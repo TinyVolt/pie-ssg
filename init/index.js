@@ -74,8 +74,12 @@ const pkg = {
   dependencies: { [app.name]: app.version, ...app.peerDependencies },
   devDependencies: { '@types/node': app.devDependencies['@types/node'], typescript: app.devDependencies.typescript },
   engines: app.engines,
+  // npm blocks dependencies' install scripts unless allowed. This lets `init/postinstall.js` refresh files on upgrade.
+  allowScripts: { [app.name]: true },
 };
 fs.writeFileSync(path.join(target, 'package.json'), JSON.stringify(pkg, null, 2) + '\n');
+// The same for pnpm.
+fs.writeFileSync(path.join(target, 'pnpm-workspace.yaml'), `allowBuilds:\n  "${app.name}": true\n`);
 
 const usesPnpm = (process.env.npm_config_user_agent ?? '').startsWith('pnpm');
 console.log(`

@@ -35,6 +35,14 @@ The site installs the app as the `@tinyvolt/pie` package. To update it:
 npm install @tinyvolt/pie@latest
 ```
 
+With pnpm:
+
+```sh
+pnpm add @tinyvolt/pie@latest
+```
+
+Updating also refreshes the site's `AGENTS.md` and `vite.config.ts`. If either differs from the new version, the old one is saved as `AGENTS.old.md` or `vite.config.old.ts`. Copy back anything you want to keep.
+
 Requires Node 24. Package: [@tinyvolt/pie](https://www.npmjs.com/package/@tinyvolt/pie).
 
 ## Developing pie-ssg
