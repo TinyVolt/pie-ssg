@@ -22,6 +22,9 @@ const call = (keyword: string, args: unknown[], options: CallOptions) =>
 /** The node at `position` of an array's items. Creates nothing. */
 const item = (arrayId: string, position: number) => request({ type: 'item', arrayId, position });
 
+/** The node with id `id`. Creates nothing. */
+const get_node = (id: string) => request({ type: 'get_node', id });
+
 /** First half of `g(a)` for `g = pie.lift(f, ...)`: the input values and the output id. */
 const lift = (name: string, inputIds: string[], kind: string, out?: string, fill?: string, stroke?: string) =>
   request({ type: 'lift', name, inputIds, kind, out, fill, stroke });
@@ -38,7 +41,7 @@ const ready = (async () => {
   py.setStdout({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.registerJsModule('bridge', {
-    call, item, lift, lift_save, batch_done, plot: (png: string) => postMessage({ type: 'plot', png }),
+    call, item, get_node, lift, lift_save, batch_done, plot: (png: string) => postMessage({ type: 'plot', png }),
   });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
   py.FS.writeFile('/home/pyodide/pie_mpl.py', PIE_MPL_PY);

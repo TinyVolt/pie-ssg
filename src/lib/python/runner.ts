@@ -45,7 +45,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     loaded = true;
     run?.onStatus('running');
   }
-  if (data.type === 'call' || data.type === 'item' || data.type === 'lift') {
+  if (data.type === 'call' || data.type === 'item' || data.type === 'get_node' || data.type === 'lift') {
     // The request to answer: this one, or, after a batch, Python's request with the batch's results.
     let reqId: number = data.reqId;
     // A reply from before a kill must not reach the new worker.
@@ -63,6 +63,13 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       } catch (err) {
         reply({ error: message(err) });
       }
+      return;
+    }
+    if (data.type === 'get_node') {
+      const node = store.getNodeValue(data.id);
+      if (!node) reply({ error: `pie.get_node: no node with id '${data.id}'` });
+      else if (node.type === 'Array') reply({ result: { id: node.id, type: node.type, shape: node.shape, itemType: node.itemType } });
+      else reply({ result: { id: node.id, type: node.type } });
       return;
     }
     if (data.type === 'lift') {

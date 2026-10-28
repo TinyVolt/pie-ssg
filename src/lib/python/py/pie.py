@@ -74,6 +74,13 @@ def _node(result):
         return Text(result.id)
     return Node(result.id, result.type)
 
+def get_node(id):
+    """The existing node with id `id`, e.g. `a = pie.get_node("A")`. Creates nothing."""
+    if not isinstance(id, str):
+        raise TypeError(f"pie.get_node: id must be a str, got {type(id).__name__}")
+    _check_bridge()
+    return _node(run_sync(bridge.get_node(id)))
+
 def _arg(a):
     if isinstance(a, Node):
         return {"id": a.id}
