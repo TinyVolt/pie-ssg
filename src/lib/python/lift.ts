@@ -61,6 +61,7 @@ function inputValue(node: AnyNode | undefined, id: string): InputValue {
   if (node.type === 'Point') return [num(node.x), num(node.y)];
   if (node.type === 'Text') return node.value;
   if (node.type === 'Array') {
+    if (node.itemType === 'Mixed') throw new Error(`'${id}' is an Array of mixed types; an Array input must hold one type`);
     const values = node.items.flatMap(item => inputValue(item, item.id)) as number[];
     return { shape: node.itemType === 'Point' ? [...node.shape, 2] : node.shape, values };
   }

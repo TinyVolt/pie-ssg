@@ -31,12 +31,10 @@ export function getItem(store: NodeStore, arrayId: string, position: number): Ex
   return { id: item.id, type: item.type };
 }
 
-/** The one type all items of a nested list share. `typeOf` gives an item's type. */
-export function listItemType(list: Arg[], typeOf: (item: LeafArg) => string): NodeType {
+/** The one type all items of a nested list share, or 'Mixed' when they differ. `typeOf` gives an item's type. */
+export function listItemType(list: Arg[], typeOf: (item: LeafArg) => string): NodeType | 'Mixed' {
   listShape(list);
   const types = new Set(leaves(list).map(typeOf));
-  if (types.size > 1) {
-    throw new Error(`all items of a list must have the same type, got ${[...types].join(', ')}`);
-  }
+  if (types.size > 1) return 'Mixed';
   return [...types][0] as NodeType;
 }

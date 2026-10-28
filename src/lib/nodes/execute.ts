@@ -40,9 +40,15 @@ function argType(arg: Arg, store: NodeStore): string {
 }
 
 /** The item type and shape of an argument that is an array, before any node is created for it. */
-function arrayOf(arg: Arg, store: NodeStore): { itemType: NodeType; shape: number[] } {
+function arrayOf(arg: Arg, store: NodeStore): { itemType: NodeType | 'Mixed'; shape: number[] } {
   if (Array.isArray(arg)) return { itemType: listItemType(arg, item => argType(item, store)), shape: listShape(arg) };
   return store.getNodeValue((arg as { id: string }).id) as ArrayNode;
+}
+
+/** The types of the items of an argument that is an array, without repeats. */
+function itemTypesOf(arg: Arg, store: NodeStore): string[] {
+  if (Array.isArray(arg)) return [...new Set(leaves(arg).map(item => argType(item, store)))];
+  return [...new Set((store.getNodeValue((arg as { id: string }).id) as ArrayNode).items.map(item => item.type))];
 }
 
 /**
@@ -130,8 +136,10 @@ export async function execute(store: NodeStore, keyword: string, args: Arg[], { 
       if (func.broadcastable === false) throw new Error(`${keyword} does not take arrays`);
       const array = arrayOf(arg, store);
       broadcastInputShapes.push(array.shape);
-      got = `Array of ${array.itemType}`;
-      if (types.includes(array.itemType)) return;
+      // A Mixed array passes when every one of its item types does.
+      const itemTypes = array.itemType === 'Mixed' ? itemTypesOf(arg, store) : [array.itemType];
+      got = `Array of ${itemTypes.join(', ')}`;
+      if (itemTypes.every(type => types.includes(type as NodeType))) return;
     }
     if (!types.includes(got as NodeType)) {
       throw new Error(`${keyword}: expected ${types.join(' or ')} but got ${got} for argument '${param.name}'`);
