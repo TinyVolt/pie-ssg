@@ -141,7 +141,8 @@ const PointGradDefinition: NodeDefinition<PointGradNode> = { type: 'PointGrad', 
 /** `items` in row-major order: shape [2, 3] holds row 0's three items, then row 1's. */
 export interface ArrayNode extends Node {
   type: 'Array';
-  itemType: NodeType;
+  /** 'Mixed' when the items are not all one type. */
+  itemType: NodeType | 'Mixed';
   shape: number[];
   items: AnyNode[];
 }
