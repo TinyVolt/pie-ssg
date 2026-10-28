@@ -94,6 +94,8 @@ pie.scalar(3, out='r')   # the circle above now has radius 3
 
 Common mistake: `center = pie.point(1, 2)` does not give the node the id `center`. It gets an automatic id. Use `pie.point(1, 2, out='center')`.
 
+`pie.get_node('<id>')` returns the existing node with that id, e.g. `c = pie.get_node('center')`, in any editor on the page. It makes no new node. An unknown id raises an error. It can't be called inside a lifted function.
+
 `fill='<color>'` and `stroke='<color>'` color a node, e.g. `pie.circle(a, r, fill='orange', stroke='#333')`:
 
 - A color is any CSS color (`'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error.

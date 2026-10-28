@@ -28,6 +28,9 @@ All `Node2NodeFunc` type functions defined in `src/lib/nodes/functions` are avai
 **Caveat**
 A node is automatically specified an ID. To provide an ID to node, use `out=<id>`. Eg `pie.point(1,2,out='center')`. A common mistake is to write `center = pie.point(1,2)` and assume that the generated point has an ID of `center`. 
 
+### Getting an existing node
+Use `pie.get_node(<id>)` to get a reference to a node that already exists. Eg `a = pie.get_node('center')`. It creates no new node. An unknown ID raises an error.
+
 ### Colors
 Use `fill=<color>` and `stroke=<color>` to color a node. Eg `pie.circle(c, 2, fill='orange', stroke='#333')`. A color is any CSS color (eg `'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error. Also works for lifted functions (see `pie.lift` below) - they accept `fill` and `stroke` too.
 
