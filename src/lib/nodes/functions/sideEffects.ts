@@ -10,7 +10,7 @@ import type { Track } from '../animation';
  * It has no inputs, so it no longer follows the old node's.
  * With `animate`, returns a track that moves the numbers from their old values to the new ones.
  */
-function replaceNode<N extends AnyNode>(store: NodeStore, node: N, changes: Partial<N>, animate: boolean): Track | undefined {
+export function replaceNode<N extends AnyNode>(store: NodeStore, node: N, changes: Partial<N>, animate: boolean): Track | undefined {
   const { __graph_deps, ...unchanged } = node;
   const end = { ...unchanged, ...changes } as AnyNode;
   if (!animate) {

@@ -2,7 +2,7 @@ import { JSX, createMemo, Show } from 'solid-js';
 import { MIN_GRID_UNIT } from '../state/NodeStore';
 
 interface CenteredGridProps {
-  /** Canvas size in viewBox units. The origin sits at the center. */
+  /** Canvas size in viewBox units. */
   width: number;
   height: number;
   /** Pixels per grid unit. */
@@ -11,6 +11,8 @@ interface CenteredGridProps {
   gridOpacity?: number;
   /** Solid fill painted behind the grid. Defaults to transparent (no rect). */
   backgroundColor?: string;
+  /** Position of the origin in the viewBox. Defaults to the center of the canvas. */
+  origin?: { x: number; y: number };
   children: JSX.Element;
 }
 
@@ -18,8 +20,8 @@ const GRID_OPACITY = 0.15;
 const AXIS_OPACITY = 0.4;
 
 export function CenteredGrid(props: CenteredGridProps) {
-  const originX = () => props.width / 2;
-  const originY = () => props.height / 2;
+  const originX = () => props.origin?.x ?? props.width / 2;
+  const originY = () => props.origin?.y ?? props.height / 2;
 
   // Local (post-transform) extents of the canvas relative to the origin.
   const extents = createMemo(() => ({

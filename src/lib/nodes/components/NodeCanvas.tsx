@@ -3,6 +3,7 @@ import { NodeStore, type NodeSignal } from '../state/NodeStore';
 import { getNodeDefinition } from '../state/Node';
 import { CenteredGrid } from './CenteredGrid';
 import { useCanvasResize } from '../hooks/useCanvasResize';
+import { useCanvasGestures } from '../hooks/useCanvasGestures';
 
 interface NodeCanvasProps {
   store: NodeStore;
@@ -11,6 +12,7 @@ interface NodeCanvasProps {
 export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
   let svgContainerRef: HTMLDivElement | undefined;
   useCanvasResize(() => svgContainerRef, props.store);
+  useCanvasGestures(() => svgContainerRef, props.store);
 
   // Canvas size in grid units: the viewBox maps one unit to `unit` pixels.
   const viewWidth = () => props.store.canvasBounds().width / props.store.unit();
@@ -52,6 +54,7 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
           unit={props.store.unit()}
           gridOpacity={props.store.gridOpacity()}
           backgroundColor={props.store.canvasColor()}
+          origin={props.store.origin()}
         >
           {/* Step 1: Draw non-`Point` nodes first */}
           <For each={layers().geometry}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>

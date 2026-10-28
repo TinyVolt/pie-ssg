@@ -5,10 +5,11 @@ Use the frontmatter `canvas` prop to add a canvas to the page. Accepted values a
 
 Each element on the canvas is a `Node`. Each `Node` has an `id`. 
 
-There are three system nodes:
+There are five system nodes:
 - `unit`: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
 - `gridOpacity`: a scalar that multiplies the opacity of the grid lines and axes (default 1; 0 hides them), e.g. `pie.scalar(0.5, out='gridOpacity')`.
 - `canvasColor`: a text holding a CSS color for the canvas background (default `''`: no background), e.g. `pie.text('#111', out='canvasColor')`.
+- `originX`, `originY`: scalars holding where the origin sits, in grid units from the canvas center (default 0; positive is right and up), e.g. `pie.scalar(1, out='originX')`. Every node moves with the origin.
 
 ---
 
@@ -26,6 +27,9 @@ All `Node2NodeFunc` type functions defined in `src/lib/nodes/functions` are avai
 
 **Caveat**
 A node is automatically specified an ID. To provide an ID to node, use `out=<id>`. Eg `pie.point(1,2,out='center')`. A common mistake is to write `center = pie.point(1,2)` and assume that the generated point has an ID of `center`. 
+
+### Getting an existing node
+Use `pie.get_node(<id>)` to get a reference to a node that already exists. Eg `a = pie.get_node('center')`. It creates no new node. An unknown ID raises an error.
 
 ### Colors
 Use `fill=<color>` and `stroke=<color>` to color a node. Eg `pie.circle(c, 2, fill='orange', stroke='#333')`. A color is any CSS color (eg `'red'`, `'#ff0000'`, `'rgb(255, 0, 0)'`) or `'none'`. A bad color raises an error. Also works for lifted functions (see `pie.lift` below) - they accept `fill` and `stroke` too.

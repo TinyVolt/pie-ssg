@@ -261,6 +261,8 @@ main .katex-display {
 .node-canvas {
   width: 100%;
   height: 100%;
+  /* Drags and pinches move the canvas, not the page. */
+  touch-action: none;
 }
 
 .canvas-page-canvas svg {

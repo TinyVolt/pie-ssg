@@ -26,6 +26,8 @@ export class NodeStore {
   public gridOpacity!: Accessor<number>;
   /** Canvas background color, read from the `canvasColor` node. `undefined` when empty: no background. */
   public canvasColor!: Accessor<string | undefined>;
+  /** Where the grid origin sits in the viewBox, read from the `originX` and `originY` nodes. */
+  public origin!: Accessor<{ x: number; y: number }>;
 
   public nameGenerator: NameGenerator;
 
@@ -55,6 +57,17 @@ export class NodeStore {
         const node = this.nodes['canvasColor']?.signal() as TextNode | undefined;
         return node?.value?.trim() || undefined;
       });
+
+      this.origin = createMemo(() => {
+        const xNode = this.nodes['originX']?.signal() as ScalarNode | undefined;
+        const yNode = this.nodes['originY']?.signal() as ScalarNode | undefined;
+        const viewWidth = this.canvasBounds().width / this.unit();
+        const viewHeight = this.canvasBounds().height / this.unit();
+        // The offset is in grid units from the canvas center. The viewBox is y-down, hence `- y`.
+        const x = xNode ? num(xNode.value) : 0;
+        const y = yNode ? num(yNode.value) : 0;
+        return { x: viewWidth / 2 + x, y: viewHeight / 2 - y };
+      });
     });
 
     // untrack: names are generated inside reactive computations, which must not rerun when the checked node changes.
@@ -80,6 +93,18 @@ export class NodeStore {
     createRoot((dispose) => {
       const signal = createMemo(() => ({ id: canvasColorId, type: 'Text', value: '' } as TextNode));
       this.saveNode(canvasColorId, signal, dispose);
+    });
+
+    const originXId = 'originX';
+    createRoot((dispose) => {
+      const signal = createMemo(() => ({ id: originXId, type: 'Scalar', value: scalar(0) } as ScalarNode));
+      this.saveNode(originXId, signal, dispose);
+    });
+
+    const originYId = 'originY';
+    createRoot((dispose) => {
+      const signal = createMemo(() => ({ id: originYId, type: 'Scalar', value: scalar(0) } as ScalarNode));
+      this.saveNode(originYId, signal, dispose);
     });
   }
 
