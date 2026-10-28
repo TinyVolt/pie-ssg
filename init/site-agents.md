@@ -100,10 +100,11 @@ Common mistake: `center = pie.point(1, 2)` does not give the node the id `center
 - Every node the call makes gets the colors, including extra nodes such as the center point of `ellipse_from_foci`.
 - A node shows only the colors its render function draws with. A point uses only `fill`, a line only `stroke`. For `partial`'s arrow, `stroke` colors the line and `fill` the head.
 
-There are three system nodes:
+There are five system nodes:
 - `unit`: a scalar holding the pixels per grid unit (default 50). Changing it changes the grid unit, e.g. `pie.scalar(80, out='unit')`.
 - `gridOpacity`: a scalar that multiplies the opacity of the grid lines and axes (default 1; 0 hides them), e.g. `pie.scalar(0.5, out='gridOpacity')`.
 - `canvasColor`: a text holding a CSS color for the canvas background (default `''`: no background), e.g. `pie.text('#111', out='canvasColor')`.
+- `originX`, `originY`: scalars holding where the origin sits, in grid units from the canvas center (default 0; positive is right and up), e.g. `pie.scalar(1, out='originX')`. Every node moves with the origin.
 
 Built-in functions:
 
@@ -131,7 +132,7 @@ These change existing nodes instead of making a new one. They run once, when cal
 
 | Call | Does |
 | --- | --- |
-| `pie.clear()` | removes every node and resets the system nodes: `unit` (pixels per grid unit) to 50, `gridOpacity` to 1, `canvasColor` to `''` |
+| `pie.clear()` | removes every node and resets the system nodes: `unit` (pixels per grid unit) to 50, `gridOpacity` to 1, `canvasColor` to `''`, `originX` and `originY` to 0 |
 | `pie.translate_point_to(p, x, y)` | moves point `p` to (x, y) |
 | `pie.translate_point_by(p, dx, dy)` | moves point `p` by (dx, dy) |
 | `pie.translate_scalar_to(s, value)` | sets scalar `s` to `value` |

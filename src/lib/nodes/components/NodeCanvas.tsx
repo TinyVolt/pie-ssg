@@ -52,6 +52,7 @@ export function NodeCanvas(props: NodeCanvasProps): JSX.Element {
           unit={props.store.unit()}
           gridOpacity={props.store.gridOpacity()}
           backgroundColor={props.store.canvasColor()}
+          origin={props.store.origin()}
         >
           {/* Step 1: Draw non-`Point` nodes first */}
           <For each={layers().geometry}>{(nodeSignal) => nodeGroup(nodeSignal)}</For>
