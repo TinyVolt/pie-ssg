@@ -82,6 +82,17 @@ Now the points are regularly spaced between `0` and `3`.
 
 ---
 
+## UIs for nodes
+One can also create UI components like sliders, checkboxes and latex strings for nodes. Pie comes with some basic components built-in. A user can extend them by implementing their own components in the `/ui` folder (e.g. `/ui/stepper.tsx`).
+
+- Built-in UIs: `slider`, `textbox`, `radio`, `checkboxes` and `latex`. 
+  - Check out `/pages/example.md` for some examples. 
+
+- **UIs are draggable.** Drag a UI by its ⋮⋮ grip (hover if it is not visible) into the page's text or onto the canvas.
+- Each PascalCase export of a file under `/ui` becomes `pie.ui.<snake_case name>`. Eg `/ui/stepper.tsx` exports `Stepper`, so a user can type `pie.ui.stepper(n, step=0.5)`.
+
+---
+
 ## Sidebar
 Use the frontmatter `sidebar` prop to show a markdown file in a collapsible sidebar on the left, eg `sidebar: _topics.md`. The file is rendered like any other page, but its frontmatter is ignored.
 

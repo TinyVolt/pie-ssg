@@ -3,43 +3,16 @@ toc: true
 sidebar: _topics.md
 canvas: right
 ---
-# Table of contents test
 
-### Before any h2
-
-Should be a top-level entry.
-
-## The $\nabla$ operator
-
-Math in a heading.
-
-### Sub *one*
-
-Nested under the operator.
-
-### Sub two
-
-Also nested.
-
-## Repeat
-
-First "Repeat", links to `#repeat`.
-
-## Repeat
-
-Second "Repeat", links to `#repeat-2`.
-
-#### Deep
-
-Not listed: only `##` and `###` are.
-
-## Last
+## Heading
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+
+---
 
 ## Generative UI
 
@@ -164,6 +137,18 @@ pie.ui.radio(pie.get_node('gridOpacity'), options=['grid off', 'grid on'])
 pie.ui.slider(pie.get_node('unit'), min=10, max=120, step=1, label='zoom')
 pie.ui.slider(pie.get_node('originX'), min=-5, max=5, label='origin x')
 pie.ui.slider(pie.get_node('originY'), min=-5, max=5, label='origin y')
+```
+
+### A UI from `/ui`
+
+`Stepper` in `ui/stepper.tsx` is a site's own UI. Its buttons and the slider stay in sync.
+
+```python-editor
+pie.clear()
+k = pie.scalar(2, out='k')
+pie.circle(pie.point(0, 0), k)
+pie.ui.stepper(k, step=0.5, label='radius')
+pie.ui.slider(k, min=0, max=5)
 ```
 
 ### Errors
