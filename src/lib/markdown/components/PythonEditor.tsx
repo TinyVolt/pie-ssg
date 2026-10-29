@@ -5,6 +5,7 @@ import { keymap } from '@codemirror/view';
 import { python } from '@codemirror/lang-python';
 import { CheckIcon, Chevron, CopyIcon, CrossIcon, PlayIcon, ResetIcon, StopIcon } from '~/components/icons';
 import type { PythonScope, RunStatus } from '~/lib/python/runner';
+import { checkUi, UiView, type UiCall } from '~/lib/ui/UiView';
 
 const STATUS_TEXT: Record<RunStatus | 'idle', string> = {
   idle: '',
@@ -49,6 +50,8 @@ export function PythonEditor(props: { code: string; collapsed?: boolean; scope: 
 
   const [status, setStatus] = createSignal<RunStatus | 'idle'>('idle');
   const [output, setOutput] = createSignal<OutputEntry[]>([]);
+  // `pie.ui.*` calls of the last run. Shown below the editor, not in its output, so they stay when it collapses.
+  const [uis, setUis] = createSignal<UiCall[]>([]);
   const [error, setError] = createSignal('');
   const [note, setNote] = createSignal('');
   const [collapsed, setCollapsed] = createSignal(props.collapsed ?? false);
@@ -73,6 +76,7 @@ export function PythonEditor(props: { code: string; collapsed?: boolean; scope: 
   const run = () => {
     if (active() || !view) return;
     setOutput([]);
+    setUis([]);
     setError('');
     setNote('');
     stop = props.scope.run(
@@ -86,6 +90,11 @@ export function PythonEditor(props: { code: string; collapsed?: boolean; scope: 
       },
       addText,
       (png) => setOutput((prev) => [...prev, { type: 'plot', png }]),
+      (call) => {
+        // The runner calls this only when the page has a canvas.
+        checkUi(props.scope.store!, call);
+        setUis((prev) => [...prev, call]);
+      },
     );
   };
 
@@ -177,6 +186,7 @@ export function PythonEditor(props: { code: string; collapsed?: boolean; scope: 
   });
 
   return (
+    <>
     <div class="python-editor" classList={{ 'python-editor-collapsed': collapsed() }}>
       <div class="python-editor-code" ref={host} />
       <div class="python-editor-resize" title="Drag to resize" onPointerDown={startResize} />
@@ -250,5 +260,11 @@ export function PythonEditor(props: { code: string; collapsed?: boolean; scope: 
         </div>
       </Show>
     </div>
+    <Show when={uis().length > 0}>
+      <div class="python-editor-uis">
+        <For each={uis()}>{(call) => <UiView store={props.scope.store!} call={call} />}</For>
+      </div>
+    </Show>
+    </>
   );
 }

@@ -253,6 +253,45 @@ def _check_out_type_and_flatten(name, returns, result):
     shape = result.shape[:-1] if item == "Point" else result.shape
     return list(shape), result.astype(np.float64).ravel().tolist()
 
+class _UI:
+    """`pie.ui.<name>(*nodes, **options)` shows UI `<name>` for the nodes below the block. A rerun of the block replaces it."""
+    def __getattr__(self, name):
+        if name.startswith("_"):
+            raise AttributeError(name)
+        def show(*args, **options):
+            _show_ui(name, args, options)
+        show.__name__ = show.__qualname__ = f"ui.{name}"
+        return show
+
+ui = _UI()
+
+def _ui_arg(name, a):
+    if isinstance(a, Node):
+        return {"id": a.id}
+    if isinstance(a, (list, tuple)):
+        return [_ui_arg(name, x) for x in a]
+    raise TypeError(f"pie.ui.{name}: positional arguments must be nodes or lists of nodes, got {type(a).__name__}")
+
+def _holds_node(v):
+    if isinstance(v, Node):
+        return True
+    if isinstance(v, (list, tuple)):
+        return any(map(_holds_node, v))
+    if isinstance(v, dict):
+        return any(map(_holds_node, v.values()))
+    return False
+
+def _show_ui(name, args, options):
+    _check_bridge()
+    if "args" in options:
+        raise TypeError(f"pie.ui.{name}: 'args' can't be a keyword argument")
+    for key, value in options.items():
+        if _holds_node(value):
+            raise TypeError(f"pie.ui.{name}: keyword argument '{key}' holds a node; pass nodes as positional arguments")
+    js_args = to_js([_ui_arg(name, a) for a in args], dict_converter=Object.fromEntries)
+    js_options = to_js(options, dict_converter=Object.fromEntries)
+    run_sync(bridge.ui(name, js_args, js_options))
+
 def __getattr__(name):
     if name.startswith("_"):
         raise AttributeError(name)

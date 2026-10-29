@@ -513,6 +513,21 @@ pre:has(> code.language-python-editor) {
   color: var(--color-error, #c00);
 }
 
+/* Outside the editor's box, so collapsing the editor keeps them. */
+.python-editor-uis {
+  margin: 1rem 0;
+}
+
+.python-editor-ui {
+  margin: 0.25rem 0;
+}
+
+.pie-ui-choices {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .python-editor-note {
   color: var(--color-subtle, #666);
 }

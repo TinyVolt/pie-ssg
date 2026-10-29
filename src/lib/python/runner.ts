@@ -2,6 +2,7 @@ import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { execute } from '~/lib/nodes/execute';
 import { getItem } from '~/lib/nodes/tensors/tensor';
 import { prepareLifts, saveLift, startLift, type BatchJob, type BatchResult, type InputValue, type PyResult } from './lift';
+import type { UiCall } from '~/lib/ui/UiView';
 
 export type RunStatus = 'waiting' | 'loading' | 'running' | 'finished' | 'stopped' | 'killed';
 
@@ -12,6 +13,8 @@ interface Run {
   onOutput: (text: string) => void;
   /** `png`: a matplotlib figure as a base64 PNG. */
   onPlot: (png: string) => void;
+  /** A `pie.ui.*` call. Throws when the call is wrong; Python raises the error. */
+  onUi: (call: UiCall) => void;
 }
 
 let worker: Worker | undefined;
@@ -45,7 +48,7 @@ function onMessage(this: Worker, { data }: MessageEvent) {
     loaded = true;
     run?.onStatus('running');
   }
-  if (data.type === 'call' || data.type === 'item' || data.type === 'get_node' || data.type === 'lift') {
+  if (data.type === 'call' || data.type === 'item' || data.type === 'get_node' || data.type === 'lift' || data.type === 'ui') {
     // The request to answer: this one, or, after a batch, Python's request with the batch's results.
     let reqId: number = data.reqId;
     // A reply from before a kill must not reach the new worker.
@@ -70,6 +73,15 @@ function onMessage(this: Worker, { data }: MessageEvent) {
       if (!node) reply({ error: `pie.get_node: no node with id '${data.id}'` });
       else if (node.type === 'Array') reply({ result: { id: node.id, type: node.type, shape: node.shape, itemType: node.itemType } });
       else reply({ result: { id: node.id, type: node.type } });
+      return;
+    }
+    if (data.type === 'ui') {
+      try {
+        run!.onUi({ name: data.name, args: data.args, options: data.options });
+        reply({ result: null });
+      } catch (err) {
+        reply({ error: message(err) });
+      }
       return;
     }
     if (data.type === 'lift') {
@@ -188,8 +200,8 @@ export class PythonScope {
   constructor(readonly store?: NodeStore) {}
 
   /** Queues `code`. Returns a stop function. `error` comes only with `finished`. */
-  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput'], onPlot: Run['onPlot']): () => void {
-    const run: Run = { scope: this, code, onStatus, onOutput, onPlot };
+  run(code: string, onStatus: Run['onStatus'], onOutput: Run['onOutput'], onPlot: Run['onPlot'], onUi: Run['onUi']): () => void {
+    const run: Run = { scope: this, code, onStatus, onOutput, onPlot, onUi };
     queue.push(run);
     onStatus('waiting');
     startNext();
