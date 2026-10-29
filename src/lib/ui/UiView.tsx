@@ -35,9 +35,10 @@ export function checkUi(store: NodeStore, call: UiCall) {
 /**
  * Shows a UI, with a grip to drag it into the page's text or onto the canvas. Shows nothing while one of its
  * nodes is removed, and the error, after the UI's name, if it throws.
+ * The `label` option is shown in front of the UI, for every UI, so the UI itself doesn't get it.
  */
 export function UiView(props: { store: NodeStore; call: UiCall }) {
-  const { name, args, options } = props.call;
+  const { name, args, options: { label, ...options } } = props.call;
   const ids = nodeIds(args);
   const handles = toHandles(props.store, args);
   const shown = () => ids.every((id) => present(props.store, id));
@@ -55,6 +56,9 @@ export function UiView(props: { store: NodeStore; call: UiCall }) {
     <div ref={home}>
       <div ref={box} class="python-editor-ui" classList={{ 'python-editor-ui-hidden': !shown() }}>
         <span class="python-editor-ui-grip" title="Drag to move" onPointerDown={startDrag}>⋮⋮</span>
+        <Show when={label != null && label !== ''}>
+          <span class="python-editor-ui-label">{String(label)}</span>
+        </Show>
         <div class="python-editor-ui-body">
           <StoreContext.Provider value={props.store}>
             <ErrorBoundary fallback={(err) => <span class="python-editor-error">pie.ui.{name}: {err instanceof Error ? err.message : String(err)}</span>}>

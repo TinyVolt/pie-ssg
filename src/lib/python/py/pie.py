@@ -254,7 +254,10 @@ def _check_out_type_and_flatten(name, returns, result):
     return list(shape), result.astype(np.float64).ravel().tolist()
 
 class _UI:
-    """`pie.ui.<name>(*nodes, **options)` shows UI `<name>` for the nodes below the block. A rerun of the block replaces it."""
+    """
+    `pie.ui.<name>(*nodes, **options)` shows UI `<name>` for the nodes below the block. A rerun of the block replaces it.
+    Every UI takes `label`, text shown in front of it (default: none).
+    """
     def __getattr__(self, name):
         if name.startswith("_"):
             raise AttributeError(name)

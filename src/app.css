@@ -558,6 +558,10 @@ main > .python-editor-ui {
   opacity: 1;
 }
 
+.python-editor-ui-label {
+  white-space: nowrap;
+}
+
 /* Touchscreens have no hover. */
 @media (hover: none) {
   .python-editor-ui-grip {

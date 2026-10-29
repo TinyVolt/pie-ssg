@@ -53,7 +53,7 @@ Move the slider: the text box, the LaTeX and the circle follow. Type `2.5` in th
 r = pie.scalar(1, out='r')
 c = pie.point(0, 0, out='c')
 pie.circle(c, r)
-pie.ui.slider(r, min=0, max=4)
+pie.ui.slider(r, min=0, max=4, label='radius')
 pie.ui.textbox(r)
 pie.ui.latex(r)
 ```
@@ -87,7 +87,7 @@ def curve(k, a):
 
 pie.lift(curve, pie.Array[pie.Point])(choice, amp)
 pie.ui.radio(choice, options=['sin', 'cos', 'tanh'])
-pie.ui.slider(amp, min=-2, max=2)
+pie.ui.slider(amp, min=-2, max=2, label='amplitude')
 pie.ui.latex(choice, amp)
 ```
 
@@ -118,7 +118,7 @@ label = pie.text('Hello', out='label')
 size = pie.scalar(24, out='size')
 pie.text(label, 0, 0, size)
 pie.ui.textbox(label)
-pie.ui.slider(size, min=8, max=60, step=1)
+pie.ui.slider(size, min=8, max=60, step=1, label='font size')
 ```
 
 ### Text box and LaTeX: a live formula
@@ -152,7 +152,7 @@ eq = pie.text('=', out='eq')
 pie.ui.latex(m, p, eq, q)
 for i in range(2):
     for j in range(2):
-        pie.ui.slider(m[i, j], min=-2, max=2)
+        pie.ui.slider(m[i, j], min=-2, max=2, label=f'm[{i}, {j}]')
 ```
 
 ### Canvas controls
@@ -161,9 +161,9 @@ UIs on the system nodes. Zooming or panning the canvas moves the sliders too. `p
 
 ```python-editor
 pie.ui.radio(pie.get_node('gridOpacity'), options=['grid off', 'grid on'])
-pie.ui.slider(pie.get_node('unit'), min=10, max=120, step=1)
-pie.ui.slider(pie.get_node('originX'), min=-5, max=5)
-pie.ui.slider(pie.get_node('originY'), min=-5, max=5)
+pie.ui.slider(pie.get_node('unit'), min=10, max=120, step=1, label='zoom')
+pie.ui.slider(pie.get_node('originX'), min=-5, max=5, label='origin x')
+pie.ui.slider(pie.get_node('originY'), min=-5, max=5, label='origin y')
 ```
 
 ### Errors
