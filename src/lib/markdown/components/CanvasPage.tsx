@@ -1,6 +1,7 @@
 import { SplitPane } from '~/components/SplitPane';
 import { NodeCanvas } from '~/lib/nodes/components/NodeCanvas';
 import { NodeStore } from '~/lib/nodes/state/NodeStore';
+import { UiLayer } from '~/lib/ui/UiLayer';
 import type { CanvasSide } from '../frontmatter';
 import { MarkdownBody } from './MarkdownBody';
 
@@ -15,6 +16,7 @@ export function CanvasPage(props: { side: Exclude<CanvasSide, 'none'>; html: str
       first={
         <div class="canvas-page-canvas">
           <NodeCanvas store={store} />
+          <UiLayer />
         </div>
       }
       second={<MarkdownBody class="canvas-page-text" html={props.html} store={store} />}

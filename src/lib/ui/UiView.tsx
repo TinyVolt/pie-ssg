@@ -1,8 +1,9 @@
-import { ErrorBoundary, Show } from 'solid-js';
+import { ErrorBoundary, onCleanup, Show } from 'solid-js';
 import { Dynamic } from 'solid-js/web';
 import type { NodeStore } from '~/lib/nodes/state/NodeStore';
 import { getUi } from './registry';
 import { nodeHandle, StoreContext, type UiArg } from './nodeHandle';
+import { dragUi } from './dragUi';
 
 /** A node as Python sends it, or a list of them at any depth. */
 type SentArg = { id: string } | SentArg[];
@@ -31,21 +32,39 @@ export function checkUi(store: NodeStore, call: UiCall) {
   if (missing !== undefined) throw new Error(`pie.ui.${call.name}: no node with id '${missing}'`);
 }
 
-/** Shows a UI. Shows nothing while one of its nodes is removed, and the error, after the UI's name, if it throws. */
+/**
+ * Shows a UI, with a grip to drag it into the page's text or onto the canvas. Shows nothing while one of its
+ * nodes is removed, and the error, after the UI's name, if it throws.
+ */
 export function UiView(props: { store: NodeStore; call: UiCall }) {
   const { name, args, options } = props.call;
   const ids = nodeIds(args);
   const handles = toHandles(props.store, args);
+  const shown = () => ids.every((id) => present(props.store, id));
+  // `box` starts in `home`. Dragging moves it out, so the editor's list, which holds `home`, is left alone.
+  let home!: HTMLDivElement;
+  let box!: HTMLDivElement;
+  onCleanup(() => box.remove());
+
+  const startDrag = (e: PointerEvent) => {
+    const text = home.closest('main');
+    if (text) dragUi(e, box, text);
+  };
 
   return (
-    <div class="python-editor-ui">
-      <StoreContext.Provider value={props.store}>
-        <ErrorBoundary fallback={(err) => <span class="python-editor-error">pie.ui.{name}: {err instanceof Error ? err.message : String(err)}</span>}>
-          <Show when={ids.every((id) => present(props.store, id))}>
-            <Dynamic component={getUi(name)!} {...options} args={handles} />
-          </Show>
-        </ErrorBoundary>
-      </StoreContext.Provider>
+    <div ref={home}>
+      <div ref={box} class="python-editor-ui" classList={{ 'python-editor-ui-hidden': !shown() }}>
+        <span class="python-editor-ui-grip" title="Drag to move" onPointerDown={startDrag}>⋮⋮</span>
+        <div class="python-editor-ui-body">
+          <StoreContext.Provider value={props.store}>
+            <ErrorBoundary fallback={(err) => <span class="python-editor-error">pie.ui.{name}: {err instanceof Error ? err.message : String(err)}</span>}>
+              <Show when={shown()}>
+                <Dynamic component={getUi(name)!} {...options} args={handles} />
+              </Show>
+            </ErrorBoundary>
+          </StoreContext.Provider>
+        </div>
+      </div>
     </div>
   );
 }
