@@ -14,6 +14,7 @@ const FILES = {
   'pages': 'pages',
   'functions': 'functions',
   'nodes': 'nodes',
+  'ui': 'ui',
   'styles': 'styles',
   'layouts': 'layouts',
   'public': 'public',

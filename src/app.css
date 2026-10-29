@@ -254,6 +254,7 @@ main .katex-display {
 }
 
 .canvas-page-canvas {
+  position: relative;
   height: 100%;
 }
 
@@ -511,6 +512,105 @@ pre:has(> code.language-python-editor) {
 
 .python-editor-error {
   color: var(--color-error, #c00);
+}
+
+/* Outside the editor's box, so collapsing the editor keeps them. */
+.python-editor-uis {
+  margin: 1rem 0;
+}
+
+/* Hidden when its UIs were all dragged away. */
+.python-editor-uis:not(:has(.python-editor-ui)) {
+  display: none;
+}
+
+/* A UI: a grip to drag it, then the UI. */
+.python-editor-ui {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+
+/* Dropped into the page's text. */
+main > .python-editor-ui {
+  margin: 1rem 0;
+}
+
+/* One of its nodes is removed. */
+.python-editor-ui-hidden {
+  display: none;
+}
+
+.python-editor-ui-grip {
+  padding: 0 0.125rem;
+  color: var(--color-subtle, #666);
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  /* A touch drag moves the UI, not the page. */
+  touch-action: none;
+  opacity: 0;
+}
+
+.python-editor-ui:hover > .python-editor-ui-grip,
+.python-editor-ui-dragging > .python-editor-ui-grip {
+  opacity: 1;
+}
+
+.python-editor-ui-label {
+  white-space: nowrap;
+}
+
+/* Touchscreens have no hover. */
+@media (hover: none) {
+  .python-editor-ui-grip {
+    opacity: 1;
+  }
+}
+
+/* Floating over the page while dragged, or on the canvas: a box, so it reads over anything under it. */
+.python-editor-ui-dragging,
+.canvas-ui-layer > .python-editor-ui {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+}
+
+.python-editor-ui-dragging {
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+}
+
+/* Where a dragged UI lands in the text. */
+.python-editor-ui-drop-line {
+  position: fixed;
+  z-index: 1000;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--color-hover, #000);
+  pointer-events: none;
+}
+
+/* Lets clicks through to the canvas, except on the UIs in it. */
+.canvas-ui-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.canvas-ui-layer > * {
+  pointer-events: auto;
+}
+
+.pie-ui-choices {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .python-editor-note {

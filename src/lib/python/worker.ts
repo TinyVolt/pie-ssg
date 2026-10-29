@@ -32,6 +32,9 @@ const lift = (name: string, inputIds: string[], kind: string, out?: string, fill
 /** Second half of `g(a)`: the first result. Python doesn't wait for a reply. */
 const lift_save = (save: object) => postMessage({ type: 'lift_save', ...save });
 
+/** `pie.ui.<name>(...)`: shows a UI below the block. `args`: nodes as `{id}`, or lists of them. */
+const ui = (name: string, args: unknown[], options: object) => request({ type: 'ui', name, args, options });
+
 /** Results of a batch the page asked for in a reply, before an animation. Waits for the call's next reply. */
 const batch_done = (results: unknown) => request({ type: 'batch_done', results });
 
@@ -41,7 +44,7 @@ const ready = (async () => {
   py.setStdout({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.setStderr({ batched: (text: string) => postMessage({ type: 'output', text: text + '\n' }) });
   py.registerJsModule('bridge', {
-    call, item, get_node, lift, lift_save, batch_done, plot: (png: string) => postMessage({ type: 'plot', png }),
+    call, item, get_node, lift, lift_save, batch_done, ui, plot: (png: string) => postMessage({ type: 'plot', png }),
   });
   py.FS.writeFile('/home/pyodide/pie.py', PIE_PY);
   py.FS.writeFile('/home/pyodide/pie_mpl.py', PIE_MPL_PY);

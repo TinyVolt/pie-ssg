@@ -19,6 +19,7 @@ npm run preview   # preview the build with vite
 | `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. A file whose name starts with `_`, e.g. `pages/_topics.md`, gets no URL; use it as a sidebar. |
 | `functions/` | Your own TypeScript functions, called from Python as `pie.<keyword>(...)`. |
 | `nodes/` | Your own node types: what a node holds and how it is drawn. |
+| `ui/` | Your own UIs for nodes, called from Python as `pie.ui.<name>(...)`. |
 | `layouts/` | Optional overrides: `header.tsx` (top of every page) and `index.tsx` (homepage, `/`). |
 | `styles/` | CSS. Every `.css` file here loads after the built-in styles, so it wins. |
 | `public/` | Static files, served as-is. |
@@ -168,6 +169,46 @@ Limits:
 - A lifted function can't call `pie.*` or index arrays.
 - `pie.partial` can't differentiate through a lifted function.
 
+### UIs for nodes: `pie.ui`
+
+`pie.ui.<name>(...)` shows a UI, such as a slider, for one or more nodes. The UI shows the nodes' values and updates when they change. A UI that writes, such as a slider, changes its node, and every node built from it updates:
+
+```python
+r = pie.scalar(1, out='r')
+pie.circle(pie.point(0, 0), r)
+pie.ui.slider(r, min=0, max=4, label='radius')
+pie.ui.latex(r)
+```
+
+- Positional arguments are nodes, or lists of nodes at any depth. Keyword arguments are plain values, never nodes.
+- Every UI takes `label='<text>'`, shown in front of it. Default: none.
+- The UIs show below the editor that made them, outside its box: collapsing the editor doesn't hide them. Running the block again replaces them, instead of adding more.
+- A UI hides while one of its nodes is removed, and shows again if a node with the same id comes back.
+- Writing a node is like `translate_*`: the node stops following the nodes it was built from.
+
+| Call | Shows |
+| --- | --- |
+| `pie.ui.slider(n, min=0, max=1, step=0.01)` | a slider for Scalar `n` |
+| `pie.ui.textbox(n)` | a text box for Scalar or Text `n`. It writes on Enter or on leaving the box. Text that isn't a number puts a Scalar's value back |
+| `pie.ui.radio(n, options=['a', 'b'])` | one radio button per option. Scalar `n` holds the chosen index. `options` is required |
+| `pie.ui.checkboxes(mask, options=['a', 'b'])` | one checkbox per item of Array of Scalars `mask`, in row-major order: 1 when ticked, 0 when not; any value other than 0 shows ticked. `options`: one label per item; without it, the labels are the item positions |
+| `pie.ui.latex(a, b, ...)` | the nodes as LaTeX, side by side. A Scalar shows its number (at most 4 decimals), a Point `(x, y)`, a Text its value as LaTeX source, an Array of 1 dimension a column and of 2 a matrix. A list of nodes is shown like an Array |
+
+Errors:
+
+- Python raises for an unknown UI name, an unknown node, a node in a keyword argument, or a keyword argument named `args`.
+- A UI given the wrong kind of node, e.g. `pie.ui.slider(point)`, shows the error in red in its place. Python doesn't raise.
+- Sidebar editors have no canvas, so `pie.ui.*` there raises "this page has no canvas".
+
+#### Dragging UIs
+
+**Every UI can be dragged; readers may not notice unless the text tells them.** Each UI has a grip, ⋮⋮, at its left. With a mouse it shows on hover; on touchscreens it always shows. Only the grip starts a drag, so sliders and text boxes work as usual. Dragging the grip:
+
+- into the page's text puts the UI between two top-level blocks (paragraphs, headings, editors, …), never inside an editor. A line shows where it will land. Near the text's top or bottom edge, the text scrolls.
+- onto the canvas puts the UI at that spot on the screen. Panning and zooming the canvas don't move it. Resizing the canvas keeps it inside.
+
+A UI moves freely between the text and the canvas. Running its block again puts it back below the editor. Positions aren't saved when the page reloads.
+
 ## Your own functions: `functions/`
 
 Each `functions/**/*.ts` file exports one or more `Node2NodeFunc` objects. Each becomes `pie.<keyword>` in Python. Copy `functions/midpoint.ts` as a starting point:
@@ -245,6 +286,39 @@ export const Square: NodeDefinition<SquareNode> = { type: 'Square', prefix: 'sq'
 - The built-in node types are in `node_modules/@tinyvolt/pie/src/lib/nodes/state/Node.ts`, and their render functions are in `node_modules/@tinyvolt/pie/src/lib/nodes/render/renderLogic.tsx`.
 - A type name used twice, by two of your files or by yours and a built-in, fails the build.
 
+## Your own UIs: `ui/`
+
+Each PascalCase export of a `ui/**/*.{ts,tsx}` file is a UI: a Solid component. Its Python name is the export name in snake_case: `Slider` is `pie.ui.slider`, `MatrixProduct` is `pie.ui.matrix_product`. Other exports, e.g. a camelCase helper, are ignored. Copy `ui/stepper.tsx` as a starting point:
+
+```tsx
+import type { ScalarNode } from '~/lib/nodes/state/Node';
+import { num, scalar } from '~/lib/nodes/jax';
+import { expectNode, type UiArg } from '~/lib/ui/nodeHandle';
+
+/** `pie.ui.stepper(n, step=1)`: − and + buttons that change Scalar `n` by `step`, with its value between them. */
+export function Stepper(props: { args: UiArg[]; step?: number }) {
+  const [n, setN] = expectNode<ScalarNode>(props.args[0], ['Scalar']);
+  const step = props.step ?? 1;
+  const add = (delta: number) => setN({ value: scalar(num(n().value) + delta) });
+  return (
+    <span>
+      <button type="button" onClick={() => add(-step)}>−</button>
+      {' '}{num(n().value)}{' '}
+      <button type="button" onClick={() => add(step)}>+</button>
+    </span>
+  );
+}
+```
+
+- `props.args` holds the positional arguments. Each node in them is a pair `[n, setN]`, like a Solid signal: `n()` returns the node's current data; call it inside the JSX so the UI updates. `setN(changes)` writes fields of the node, e.g. `{ value: scalar(2) }`. A list stays a list of pairs.
+- The keyword arguments are the other props, as plain values.
+- `expectNode(arg, types)` checks that `arg` is one node of one of `types` and returns its pair. Otherwise it throws, and the UI shows the error.
+- `useSetNode()` returns `setNode(node, changes)`, to write a node that isn't an argument, such as an Array's item: `setNode(array().items[i], { value: scalar(1) })`. Write an Array's items one by one: replacing the whole Array removes its item nodes and everything built from them.
+- A UI that throws shows `pie.ui.<name>: <message>` in red in its place.
+- Don't add a grip or a label: every UI gets both. `args` and `label` are reserved prop names.
+- The built-in UIs are in `node_modules/@tinyvolt/pie/src/lib/ui/components/`.
+- A name used twice, by two of your files or by yours and a built-in, raises an error when a page with a Python editor loads. It doesn't fail the build.
+
 ## Layouts: `layouts/`
 
 - `layouts/header.tsx`: replaces the header on every page.
@@ -258,6 +332,13 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 
 - Sidebar: `--sidebar-width` (default `16rem`), `--sidebar-drawer-below` (default `768px`; narrower screens open it over the page) and `--color-backdrop` (behind it when it opens over the page). Its parts have the classes `.sidebar`, `.sidebar-text`, `.sidebar-edge`, `.sidebar-toggle` and `.sidebar-backdrop`.
 - Table of contents: `.toc`.
+- UIs (`pie.ui.*`):
+  - `.python-editor-uis`: a block's UIs below its editor.
+  - `.python-editor-ui`: one UI, wherever it is. It holds `.python-editor-ui-grip` (the ⋮⋮ drag grip), `.python-editor-ui-label` (the `label`) and `.python-editor-ui-body` (the UI itself).
+  - Where it is: `main > .python-editor-ui` (dropped in the text), `.canvas-ui-layer > .python-editor-ui` (on the canvas), `.python-editor-ui-dragging` (while dragged).
+  - `.python-editor-ui-drop-line`: the line that shows where a dragged UI lands in the text.
+  - Built-in UIs: match by element, e.g. `.python-editor-ui input[type=range]` (slider), `.python-editor-ui input[type=text]` (text box), `.python-editor-ui .katex` (LaTeX). `.pie-ui-choices` holds the radio buttons or checkboxes.
+  - E.g. a wider slider: `.python-editor-ui input[type=range] { width: 16rem; }`. A grip that always shows: `.python-editor-ui-grip { opacity: 1; }`.
 
 ## Build checks
 
