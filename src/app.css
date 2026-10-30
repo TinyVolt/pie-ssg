@@ -385,6 +385,106 @@ main .katex-display {
   text-decoration: underline;
 }
 
+/* `tags: #math`: the page's tags, at the end of its text. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 2rem 0 1rem;
+  font-size: 0.95em;
+}
+
+.tags a {
+  text-decoration: none;
+}
+
+.tags a:hover {
+  color: var(--color-hover, #000);
+  text-decoration: underline;
+}
+
+/* A page's description in the list of pages with a tag. */
+.tagged-description {
+  margin: 0;
+  color: var(--color-muted, #555);
+  font-size: 0.95em;
+}
+
+/* `glossary: _terms.md`: a term in the text. */
+.term {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+/* GlossaryView sets its top or bottom, and `--term-left`. It stays on screen, at most 22rem wide. */
+.term-popup {
+  --term-popup-width: min(22rem, 100vw - 2rem);
+  display: none;
+  position: fixed;
+  z-index: 30;
+  left: clamp(1rem, var(--term-left), 100vw - 1rem - var(--term-popup-width));
+  box-sizing: border-box;
+  width: var(--term-popup-width);
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: normal;
+  cursor: auto;
+}
+
+@media (hover: hover) {
+  .term:hover > .term-popup {
+    display: block;
+  }
+}
+
+.term--open > .term-popup {
+  display: block;
+}
+
+/* The first 4 lines of the definition, then "…". */
+.term-popup-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+.term-popup-text > * {
+  margin: 0;
+}
+
+.term-more {
+  color: var(--color-muted, #555);
+}
+
+/* The page's glossary, at its end, collapsed. */
+.glossary {
+  margin: 2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #ddd);
+}
+
+.glossary summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.glossary dt {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.glossary dd {
+  margin: 0.25rem 0 0;
+}
+
 /* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
 pre:has(> code.language-python-editor) {
   visibility: hidden;

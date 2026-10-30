@@ -114,6 +114,43 @@ To turn it on for every page, set `toc: true` in `site.yml`. A page's `toc: fals
 
 ---
 
+## Glossary
+Use the frontmatter `glossary` prop to explain terms in a page, eg `glossary: _terms.md`. In that file, each `##` heading is a term, and the text up to the next `##` is its definition. A definition can hold anything markdown can, including math and code.
+
+```md
+# Glossary
+
+## Gradient
+The vector of partial derivatives, $\nabla f$.
+
+## Learning rate
+How big a step to take.
+```
+
+In the page, write `[[gradient]]`, or `[[slopes|gradient]]` to show different words. Matching ignores case. `[[...]]` inside code is left alone.
+
+- Hovering a term shows a popup with the first 4 lines of its definition and a "more" link. On touch screens, a tap shows it and a tap anywhere else hides it.
+- The section's title is the file's `#` heading, eg `# References`. Without one, it is "Glossary".
+
+To give every page the same glossary, set it in `site.yml`, eg `glossary: pages/_terms.md` (relative to the project root). A page's own `glossary` wins; `glossary: none` turns it off for that page.
+
+A term missing from the file, a term that appears twice in the file (ignoring case), a missing glossary file, or one outside the project fails the build.
+
+**Caveat**
+`[[...]]` only works in the page's own text. In a sidebar file, in the glossary file, or on a page without a glossary, it shows as written, brackets included.
+
+---
+
+## Tags
+Use the frontmatter `tags` prop to tag a page, eg `tags: #math #linear-algebra`. Tags can be separated by spaces or commas.
+
+- The page shows its tags as links at the end of its text. 
+- `/_tags` lists every tag and how many pages have it. 
+
+A tag is made of letters, digits, `_`, `+` and `-`, and is turned into lower case. A word that isn't a tag, eg `math` without its `#`, is skipped without an error.
+
+---
+
 ## Styling
 Add or modify the existing style in `/styles` folder. Every `.css` file under the `/styles` folder is loaded after the built-in `src/app.css`, so its rules override the defaults. Change the CSS variables in `/styles/theme.css` (colors, fonts, text width), or add your own rules, eg `main h1 { color: crimson; }`.
 

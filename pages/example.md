@@ -2,13 +2,14 @@
 toc: true
 sidebar: _topics.md
 canvas: right
+glossary: _terms.md
 ---
 
 ## Heading
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Lorem ipsum dolor sit amet, consectetur adipiscing elit, the [[gradient]] of a long sentence that wraps onto the next line near the edge of the text, [[Gradient]].
 
-Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+Lorem ipsum dolor [[nodes|node]] sit amet, consectetur adipiscing elit, [[slider]].
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 

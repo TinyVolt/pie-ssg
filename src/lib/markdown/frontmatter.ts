@@ -45,6 +45,20 @@ export function markdownFile(): Field<string> {
   };
 }
 
+/**
+ * Words written `#tag`, separated by spaces or commas, lowercased and without repeats. Other words are ignored.
+ * A tag has only letters, numbers, `-`, `_` and `+`: it's also a URL, and prerendering can't reach one with `/`, `?` or `.`.
+ */
+export function hashtags(): Field<string[]> {
+  return {
+    default: [],
+    parse(raw) {
+      const words = raw.split(/[\s,]+/).map(word => /^#([\p{L}\p{N}_+-]+)$/u.exec(word)?.[1].toLowerCase());
+      return [...new Set(words.filter(tag => tag !== undefined))];
+    },
+  };
+}
+
 /** Every frontmatter field a page can set. Keys not listed here are ignored. */
 const FIELDS = {
   canvas: oneOf(['left', 'right', 'top', 'bottom', 'none'], 'none'),

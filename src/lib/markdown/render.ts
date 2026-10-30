@@ -7,7 +7,7 @@ function renderMath(formula: string, displayMode: boolean): string {
   return katex.renderToString(formula, { displayMode, throwOnError: false });
 }
 
-function escapeHtml(text: string): string {
+export function escapeHtml(text: string): string {
   return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
@@ -90,5 +90,15 @@ const marked = new Marked(BASE);
 /** `extensions`: markdown syntax the page's features add. */
 export function renderMarkdown(markdown: string, extensions: MarkedExtension[] = []): string {
   const parser = extensions.length === 0 ? marked : new Marked(BASE, ...extensions);
-  return parser.parse(markdown) as string;
+  try {
+    return parser.parse(markdown) as string;
+  } catch (e) {
+    // marked adds "Please report this to …" to every error, even a feature's, e.g. an unknown glossary term.
+    throw new Error((e as Error).message.replace(/\nPlease report this to .*$/, ''));
+  }
+}
+
+/** One line of markdown as HTML, without the `<p>` around it. */
+export function renderInline(markdown: string): string {
+  return marked.parseInline(markdown) as string;
 }
