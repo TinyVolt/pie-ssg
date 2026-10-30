@@ -13,6 +13,7 @@
  */
 import type { MarkedExtension } from 'marked';
 import type { Field } from '../frontmatter';
+import { glossary } from './glossary/build';
 import { sidebar } from './sidebar/build';
 import { toc } from './toc/build';
 
@@ -22,8 +23,8 @@ export interface BuildContext {
   file: string;
   /** The file that set the value: the page, or `site.yml`. */
   from: string;
-  /** The HTML of the `.md` file at `path`, relative to the folder of `from`. Throws if it's missing or outside the project. */
-  renderFile(path: string): string;
+  /** The markdown of the `.md` file at `path`, relative to the folder of `from`, without its frontmatter. Throws if it's missing or outside the project. */
+  readFile(path: string): string;
 }
 
 /** A feature's build half. `T`: its frontmatter value. `D`: the data its view gets. */
@@ -31,19 +32,19 @@ export interface FeatureBuild<T, D> {
   field: Field<T>;
   /** Returns `undefined` to turn the feature off on this page. */
   build(value: T, ctx: BuildContext): D | undefined;
-  /** Extra markdown syntax for this page. */
-  markdown?(data: D): MarkedExtension;
+  /** Extra markdown syntax for this page. Called only when `build` didn't turn the feature off. */
+  markdown?(value: T, ctx: BuildContext): MarkedExtension;
 }
 
 /** Keyed by frontmatter key. */
-const FEATURES = { sidebar, toc };
+const FEATURES = { sidebar, toc, glossary };
 
 type DataOf<F> = F extends FeatureBuild<any, infer D> ? D : never;
 
-// Today: `{ sidebar?: string; toc?: true }`.
+// Today: `{ sidebar?: string; toc?: true; glossary?: true }`.
 export type FeatureData = { [K in keyof typeof FEATURES]?: DataOf<(typeof FEATURES)[K]> };
 
-// Today: `{ sidebar: sidebar.field, toc: toc.field }`. `site.yml` reads these too.
+// Today: `{ sidebar: sidebar.field, toc: toc.field, glossary: glossary.field }`. `site.yml` reads these too.
 export const FEATURE_FIELDS = Object.fromEntries(
   Object.entries(FEATURES).map(([key, feature]) => [key, feature.field]),
 ) as { [K in keyof typeof FEATURES]: (typeof FEATURES)[K]['field'] };
@@ -53,7 +54,7 @@ export function buildFeatures(
   file: string,
   raw: Record<string, string>,
   site: Record<string, unknown>,
-  renderFile: (from: string, path: string) => string,
+  readFile: (from: string, path: string) => string,
 ): { data: FeatureData; extensions: MarkedExtension[] } {
   const data: Record<string, unknown> = {};
   const extensions: MarkedExtension[] = [];
@@ -61,10 +62,11 @@ export function buildFeatures(
     const from = Object.hasOwn(raw, key) ? file : 'site.yml';
     try {
       const value = from === file ? feature.field.parse(raw[key]) : site[key];
-      const built = feature.build(value, { file, from, renderFile: path => renderFile(from, path) });
+      const ctx: BuildContext = { file, from, readFile: path => readFile(from, path) };
+      const built = feature.build(value, ctx);
       if (built === undefined) continue;
       data[key] = built;
-      if (feature.markdown) extensions.push(feature.markdown(built));
+      if (feature.markdown) extensions.push(feature.markdown(value, ctx));
     } catch (e) {
       throw new Error(`${from}: \`${key}\` ${(e as Error).message}`);
     }

@@ -32,7 +32,7 @@ export function markdownPages(): Plugin {
       this.addWatchFile(siteFile);
       const site = parseSite('site.yml', fs.readFileSync(siteFile, 'utf8'));
 
-      const renderFile = (from: string, mdPath: string) => {
+      const readFile = (from: string, mdPath: string) => {
         const target = path.resolve(root, path.dirname(from), mdPath);
         const relative = path.relative(root, target);
         if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
@@ -41,10 +41,10 @@ export function markdownPages(): Plugin {
         const shown = relative.split(path.sep).join('/');
         if (!fs.existsSync(target)) throw new Error(`file ${shown} does not exist`);
         this.addWatchFile(target);
-        return renderMarkdown(parseFrontmatter(shown, fs.readFileSync(target, 'utf8')).body);
+        return parseFrontmatter(shown, fs.readFileSync(target, 'utf8')).body;
       };
 
-      const { data, extensions } = buildFeatures(file, raw, site, renderFile);
+      const { data, extensions } = buildFeatures(file, raw, site, readFile);
       const page: Page = { frontmatter, html: renderMarkdown(body, extensions), features: data };
       return { code: `export default ${JSON.stringify(page)};`, map: null };
     },
