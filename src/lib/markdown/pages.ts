@@ -12,10 +12,13 @@ export interface Page {
 // A file whose name starts with `_` is not a page; it can still be used by a feature, e.g. as a sidebar.
 const loaders = import.meta.glob<Page>(['/pages/**/*.md', '!/pages/**/_*.md'], { import: 'default' });
 
-// Slug -> loader. `/pages/a/b.md` has the slug `a/b`.
-const bySlug = new Map(
-  Object.entries(loaders).map(([path, load]) => [path.replace(/^\/pages\//, '').replace(/\.md$/, ''), load]),
-);
+/** `/pages/a/b.md` -> `a/b`. */
+export function slugOf(path: string): string {
+  return path.replace(/^\/pages\//, '').replace(/\.md$/, '');
+}
+
+// Slug -> loader.
+const bySlug = new Map(Object.entries(loaders).map(([path, load]) => [slugOf(path), load]));
 
 export const slugs = [...bySlug.keys()];
 

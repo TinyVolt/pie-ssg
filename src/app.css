@@ -385,6 +385,31 @@ main .katex-display {
   text-decoration: underline;
 }
 
+/* `tags: #math`: the page's tags, at the end of its text. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 2rem 0 1rem;
+  font-size: 0.95em;
+}
+
+.tags a {
+  text-decoration: none;
+}
+
+.tags a:hover {
+  color: var(--color-hover, #000);
+  text-decoration: underline;
+}
+
+/* A page's description in the list of pages with a tag. */
+.tagged-description {
+  margin: 0;
+  color: var(--color-muted, #555);
+  font-size: 0.95em;
+}
+
 /* `glossary: _terms.md`: a term in the text. */
 .term {
   text-decoration: underline dotted;

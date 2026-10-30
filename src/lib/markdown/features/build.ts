@@ -15,6 +15,7 @@ import type { MarkedExtension } from 'marked';
 import type { Field } from '../frontmatter';
 import { glossary } from './glossary/build';
 import { sidebar } from './sidebar/build';
+import { tags } from './tags/build';
 import { toc } from './toc/build';
 
 /** The second argument to a feature's `build`. */
@@ -36,15 +37,18 @@ export interface FeatureBuild<T, D> {
   markdown?(value: T, ctx: BuildContext): MarkedExtension;
 }
 
-/** Keyed by frontmatter key. */
-const FEATURES = { sidebar, toc, glossary };
+/**
+ * Keyed by frontmatter key. The last feature's `postprocess` runs first, so `tags`, being after `glossary`,
+ * ends the page's text and the glossary comes after it.
+ */
+const FEATURES = { sidebar, toc, glossary, tags };
 
 type DataOf<F> = F extends FeatureBuild<any, infer D> ? D : never;
 
-// Today: `{ sidebar?: string; toc?: true; glossary?: true }`.
+// Today: `{ sidebar?: string; toc?: true; glossary?: true; tags?: true }`.
 export type FeatureData = { [K in keyof typeof FEATURES]?: DataOf<(typeof FEATURES)[K]> };
 
-// Today: `{ sidebar: sidebar.field, toc: toc.field, glossary: glossary.field }`. `site.yml` reads these too.
+// Today: `{ sidebar: sidebar.field, toc: toc.field, glossary: glossary.field, tags: tags.field }`. `site.yml` reads these too.
 export const FEATURE_FIELDS = Object.fromEntries(
   Object.entries(FEATURES).map(([key, feature]) => [key, feature.field]),
 ) as { [K in keyof typeof FEATURES]: (typeof FEATURES)[K]['field'] };

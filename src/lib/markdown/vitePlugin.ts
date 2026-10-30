@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { buildFeatures } from './features/build';
+import { buildFeatures, FEATURE_FIELDS } from './features/build';
+import type { PageTags } from './features/tags/pages';
 import { parseFrontmatter } from './frontmatter';
 import type { Page } from './pages';
 import { renderMarkdown } from './render';
@@ -11,6 +12,7 @@ import { parseSite } from '../site/vitePlugin';
 /**
  * Turns each `pages/**\/*.md` into a module whose default export is a `Page`, at build time,
  * so the browser gets finished HTML and never runs the markdown tools.
+ * With `?tags`, the module's default export is a `PageTags` instead, so the tag pages don't load every page's HTML.
  * Bad frontmatter, or a feature's bad value, fails the build; in dev it shows Vite's error screen.
  */
 export function markdownPages(): Plugin {
@@ -23,9 +25,16 @@ export function markdownPages(): Plugin {
       root = config.root;
     },
     transform(markdown, id) {
-      const file = path.relative(root, id.split('?')[0]);
+      const [filePath, query] = id.split('?');
+      const file = path.relative(root, filePath);
       if (!file.startsWith(`pages${path.sep}`) || !file.endsWith('.md')) return;
       const { frontmatter, raw, body } = parseFrontmatter(file, markdown);
+
+      if (new URLSearchParams(query).has('tags')) {
+        const { title, description } = frontmatter;
+        const page: PageTags = { title, description, tags: FEATURE_FIELDS.tags.parse(raw.tags ?? '') };
+        return { code: `export default ${JSON.stringify(page)};`, map: null };
+      }
 
       // Features read `site.yml` for the keys a page leaves out, so editing it rebuilds every page.
       const siteFile = path.join(root, 'site.yml');
