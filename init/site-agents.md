@@ -16,7 +16,7 @@ npm run preview   # preview the build with vite
 
 | Folder / file | What it holds |
 | --- | --- |
-| `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. A file whose name starts with `_`, e.g. `pages/_topics.md`, gets no URL; use it as a sidebar. |
+| `pages/` | Markdown pages. `pages/a/b.md` is served at `/a/b`. A file whose name starts with `_`, e.g. `pages/_topics.md`, gets no URL; use it as a sidebar or a glossary. |
 | `functions/` | Your own TypeScript functions, called from Python as `pie.<keyword>(...)`. |
 | `nodes/` | Your own node types: what a node holds and how it is drawn. |
 | `ui/` | Your own UIs for nodes, called from Python as `pie.ui.<name>(...)`. |
@@ -35,7 +35,7 @@ Flat `key: value` lines. Values may be quoted. A key may appear only once.
 - `title` (required): shown in the header and in every browser tab title.
 - `url`: where the site is deployed, e.g. `https://example.com`. Needed for `sitemap.xml`, `robots.txt`, canonical links and `og:url`; without it the build skips them and warns.
 - `description`: shown in search results and link previews for a page with no `description` of its own.
-- `sidebar`, `toc`: the value for every page that doesn't set the key itself (see "Pages"). A `sidebar` path here is relative to the project root, e.g. `sidebar: pages/_topics.md`.
+- `sidebar`, `toc`, `glossary`: the value for every page that doesn't set the key itself (see "Pages"). A `sidebar` or `glossary` path here is relative to the project root, e.g. `sidebar: pages/_topics.md`.
 
 ## Pages
 
@@ -58,12 +58,22 @@ canvas: left
   - On screens narrower than `--sidebar-drawer-below` (768px by default), it opens over the page instead. Tapping outside it or on one of its links closes it.
   - Its frontmatter is ignored. Its Python editors share variables only with each other, and have no canvas: a `pie.*` call there raises "this page has no canvas".
 - `toc`: `true` or `false`. `true` adds a table of contents of the page's `##` and `###` headings, after its leading `#` title, or at the very start if it has none. Each `###` is nested under the `##` before it. Every heading gets an `id`, and duplicate headings get `-2`, `-3`, …. No list if the page has no `##` or `###`. Left out: `site.yml`'s `toc`, else `false`.
+- `glossary`: a `.md` file of terms, e.g. `glossary: _terms.md`. The path is relative to the page's file. `none`: no glossary, even when `site.yml` sets one. Left out: `site.yml`'s `glossary`.
+  - In that file, each `##` heading is a term, and the text up to the next `##` is its definition, in any markdown. Its `#` heading names the section at the end of the page; without one, the section is called "Glossary". Other text before the first `##` is ignored.
+  - In the page, `[[term]]` marks a term, and `[[shown|term]]` shows other words. Matching ignores case. `[[...]]` inside code is left alone.
+  - Hovering a term shows a popup with the first 4 lines of its definition and a "more" link. On touch screens, a tap shows it and a tap anywhere else hides it.
+  - "more" opens a collapsed section at the end of the page and scrolls to the term. The section lists only the terms the page uses, in the file's order.
+  - `[[...]]` only works in the page's own text. In a sidebar file, in the glossary file, or on a page without a glossary, it shows as written, brackets included.
+- `tags`: hashtags separated by spaces or commas, e.g. `tags: #math #linear-algebra`. A tag is made of letters, digits, `_`, `+` and `-`, and is turned into lower case. A word that isn't a tag, e.g. `math` without its `#`, is skipped without an error.
+  - The page shows its tags as links at the end of its text. Each opens `/_tags/<tag>`, which lists the pages with that tag, sorted by title. A page without a `title` is listed by its URL.
+  - `/_tags` lists every tag and how many pages have it. Only the tag pages link to it.
+  - Only a page's own frontmatter counts: `tags` in `site.yml` does nothing.
 
 Other keys are ignored. A bad value fails the build, and shows an error screen in dev.
 
 Math uses KaTeX: `$…$` inline, and `$$…$$` on its own lines for a display block.
 
-A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/pages`). For example, `pages/pages.md` fails the build.
+A page's URL must not match a route in `node_modules/@tinyvolt/pie/src/routes/` (`/`, `/pages`, `/_tags`, `/_tags/<tag>`). For example, `pages/pages.md` fails the build.
 
 ## Python editors
 
@@ -332,6 +342,8 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 
 - Sidebar: `--sidebar-width` (default `16rem`), `--sidebar-drawer-below` (default `768px`; narrower screens open it over the page) and `--color-backdrop` (behind it when it opens over the page). Its parts have the classes `.sidebar`, `.sidebar-text`, `.sidebar-edge`, `.sidebar-toggle` and `.sidebar-backdrop`.
 - Table of contents: `.toc`.
+- Glossary: `.term` (a term in the text), `.term-popup` (its popup), which holds `.term-popup-text` and `.term-more` (the "more" link), and `.glossary` (the section at the end of the page).
+- Tags: `.tags` (the links at the end of a page) and `.tagged-description` (a page's description on a tag's page).
 - UIs (`pie.ui.*`):
   - `.python-editor-uis`: a block's UIs below its editor.
   - `.python-editor-ui`: one UI, wherever it is. It holds `.python-editor-ui-grip` (the ⋮⋮ drag grip), `.python-editor-ui-label` (the `label`) and `.python-editor-ui-body` (the UI itself).
@@ -345,7 +357,8 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 `npm run build` fails, with a message naming the file, when:
 
 - a page's frontmatter or `site.yml` has a bad line or value, or `site.yml` has no `title`
-- a `sidebar` file doesn't exist or is outside the project
+- a `sidebar` or `glossary` file doesn't exist or is outside the project
+- a page uses a `[[term]]` its glossary file doesn't have, or that file has a term twice, ignoring case
 - a page's URL matches a route in `node_modules/@tinyvolt/pie/src/routes/`
 - a `functions/` keyword is used twice
 - a `nodes/` type name is used twice
