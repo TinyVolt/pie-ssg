@@ -7,7 +7,20 @@
 
 A Markdown-based SSG for interactive science explainers
 
-See the [roadmap](ROADMAP.md) for planned features and [documentation](DOCS.md) for existing features.
+[![pie demo](https://img.youtube.com/vi/NAX6A_9NIvA/hqdefault.jpg)](https://youtu.be/NAX6A_9NIvA)
+
+Website: [pie.tinyvolt.com](https://pie.tinyvolt.com/)
+
+~~See the [roadmap](ROADMAP.md) for planned features~~ and [documentation](DOCS.md) for existing features.
+
+Features:
+- Python editor with scientific computing toolkit (`numpy`, `scipy`, `matplotlib` etc)
+- Canvas for visualizations
+- Autodiff
+- Navigation tools like auto-generated toc, sidebar, glossary and hashtags.
+- Generative UI
+
+---
 
 ## Create a site
 
