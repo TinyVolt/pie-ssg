@@ -174,3 +174,48 @@ Every page also gets `og:title`, `og:site_name` and, if set, a description: the 
 ## Examples
 
 Coming soon. 
+
+---
+
+## Hosting on GitHub Pages
+**Caveat**
+This only works for the repo named `username.github.io`, which is served at `https://username.github.io`. A repo with any other name is served at `https://username.github.io/repo/`, and the site breaks there: its links and assets start at `/`, so they point outside `/repo/`.
+
+1. Push the site to a repo named `username.github.io`, with `main` as its default branch. Include `package-lock.json`.
+2. Set `url: https://username.github.io` in `site.yml`.
+3. In the repo's **Settings > Pages**, set **Source** to **GitHub Actions**.
+4. Add this file as `.github/workflows/deploy.yml`:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .output/public
+      - id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+5. Push to `main`. Every push to `main` now builds the site and deploys `.output/public` to GitHub Pages.
