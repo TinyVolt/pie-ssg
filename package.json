@@ -1,6 +1,6 @@
 {
   "name": "@tinyvolt/pie",
-  "version": "0.9",
+  "version": "0.9.0",
   "description": "A Markdown-based SSG for interactive science explainers. Create a site with: npx @tinyvolt/pie init my-site",
   "type": "module",
   "homepage": "https://pie.tinyvolt.com/",
