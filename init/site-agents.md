@@ -52,7 +52,7 @@ canvas: left
 
 - `title`: the tab title. Empty means the tab shows the site title alone.
 - `description`: shown in search results and link previews. Empty means `site.yml`'s `description`.
-- `canvas`: `left`, `right`, `top`, `bottom` or `none` (default). Adds a canvas on that side of the page.
+- `canvas`: `left`, `right`, `top`, `bottom` or `none` (default). Every page has a canvas, on that side of the page. `none`: it starts collapsed on the right, and the button on the divider opens it. Every `pie.*` call works either way. Python can show, hide or move it: see `pie.show_canvas` under "Side effects".
 - `sidebar`: a `.md` file shown in a collapsible sidebar on the left, e.g. `sidebar: _topics.md`. The path is relative to the page's file. `none`: no sidebar, even when `site.yml` sets one. Left out: `site.yml`'s `sidebar`.
   - It starts collapsed. A button opens it, and the rest of the page shrinks to make room. A new page starts with it collapsed.
   - On screens narrower than `--sidebar-drawer-below` (768px by default), it opens over the page instead. Tapping outside it or on one of its links closes it.
@@ -141,7 +141,7 @@ Arguments can be nodes or plain numbers. Passing an array where one item is expe
 
 ### Side effects
 
-These change existing nodes instead of making a new one. They run once, when called.
+These change existing nodes, or the canvas, instead of making a new one. They run once, when called.
 
 | Call | Does |
 | --- | --- |
@@ -155,8 +155,11 @@ These change existing nodes instead of making a new one. They run once, when cal
 | `pie.hide(node)` | stops drawing `node` |
 | `pie.show(node)` | draws a hidden `node` again |
 | `pie.remove(node)` | removes `node`; nodes built from it are removed too |
+| `pie.show_canvas(side)` | shows the canvas. `side` is optional: `left`, `right`, `top` or `bottom` also moves it there. Any other value raises an error |
+| `pie.hide_canvas()` | collapses the canvas; its nodes stay |
 
 - `p`, `s` or `node` can be an array: every item changes.
+- `pie.clear()` doesn't change whether the canvas is shown, or its side.
 - A moved node stops following the nodes it was built from. Nodes built from it follow the move. A moved point keeps its colors.
 - The four `translate_*` calls take `animate=True`: the value moves to its new value over half a second instead of jumping. The call returns when the move ends, so a loop of animated calls plays one after another. An array's items move together. Other calls raise an error if passed `animate`.
 
