@@ -11,7 +11,7 @@ A Markdown-based SSG for interactive science explainers
 
 Website: [pie.tinyvolt.com](https://pie.tinyvolt.com/)
 
-~~See the [roadmap](ROADMAP.md) for planned features~~ and [documentation](DOCS.md) for existing features.
+See the [documentation](DOCS.md) for existing features.
 
 Features:
 - Python editor with scientific computing toolkit (`numpy`, `scipy`, `matplotlib` etc)
@@ -54,7 +54,7 @@ With pnpm:
 pnpm add @tinyvolt/pie@latest
 ```
 
-Updating also refreshes the site's `AGENTS.md` and `vite.config.ts`. If either differs from the new version, the old one is saved as `AGENTS.old.md` or `vite.config.old.ts`. Copy back anything you want to keep.
+Updating doesn't change the site's `AGENTS.md` or `vite.config.ts`. To get the new versions, copy `node_modules/@tinyvolt/pie/init/site-agents.md` to `AGENTS.md` and `node_modules/@tinyvolt/pie/init/site-vite.config.ts` to `vite.config.ts`. Keep any edits of your own.
 
 Requires Node 24. Package: [@tinyvolt/pie](https://www.npmjs.com/package/@tinyvolt/pie).
 

@@ -1,6 +1,6 @@
 {
   "name": "@tinyvolt/pie",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "A Markdown-based SSG for interactive science explainers. Create a site with: npx @tinyvolt/pie init my-site",
   "type": "module",
   "homepage": "https://pie.tinyvolt.com/",
@@ -32,8 +32,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
-    "preview": "vite preview",
-    "postinstall": "node init/postinstall.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@codemirror/lang-python": "6.2.1",
