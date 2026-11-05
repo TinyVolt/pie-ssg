@@ -3,7 +3,8 @@ import { Chevron, type Direction } from './icons';
 
 /** The edge the first pane sits against. */
 export type SplitSide = 'left' | 'right' | 'top' | 'bottom';
-type Collapsed = 'none' | 'first' | 'second';
+/** The collapsed pane, if any. */
+export type Collapsed = 'none' | 'first' | 'second';
 
 // Limits on the first pane's share, in %, while dragging.
 const MIN_PERCENT = 20;
@@ -113,6 +114,8 @@ export interface SplitPaneProps {
   /** Names used on the collapse buttons, e.g. "Hide canvas". */
   firstLabel: string;
   secondLabel: string;
+  collapsed: Collapsed;
+  setCollapsed: (c: Collapsed) => void;
   class?: string;
 }
 
@@ -123,7 +126,6 @@ export interface SplitPaneProps {
 export function SplitPane(props: SplitPaneProps) {
   let ref: HTMLDivElement | undefined;
   const [firstPercent, setFirstPercent] = createSignal(50);
-  const [collapsed, setCollapsed] = createSignal<Collapsed>('none');
 
   const startResize = (e: PointerEvent) => {
     e.preventDefault();
@@ -131,23 +133,23 @@ export function SplitPane(props: SplitPaneProps) {
       if (!ref) return;
       const pct = firstPercentAt(props.side, ref.getBoundingClientRect(), ev.clientX, ev.clientY);
       if (pct < SNAP_PERCENT) {
-        setCollapsed('first');
+        props.setCollapsed('first');
       } else if (pct > 100 - SNAP_PERCENT) {
-        setCollapsed('second');
+        props.setCollapsed('second');
       } else {
-        setCollapsed('none');
+        props.setCollapsed('none');
         setFirstPercent(Math.min(MAX_PERCENT, Math.max(MIN_PERCENT, pct)));
       }
     });
   };
 
   const firstStyle = (): JSX.CSSProperties => {
-    const c = collapsed();
+    const c = props.collapsed;
     if (c === 'first') return HIDDEN_PANE;
     if (c === 'second') return { flex: '1 1 0%' };
     return { flex: `0 0 ${firstPercent()}%` };
   };
-  const secondStyle = (): JSX.CSSProperties => (collapsed() === 'second' ? HIDDEN_PANE : { flex: '1 1 0%' });
+  const secondStyle = (): JSX.CSSProperties => (props.collapsed === 'second' ? HIDDEN_PANE : { flex: '1 1 0%' });
 
   return (
     <div class={`split-pane split-pane--${props.side} ${props.class ?? ''}`} ref={ref}>
@@ -156,8 +158,8 @@ export function SplitPane(props: SplitPaneProps) {
       </div>
       <SplitDivider
         side={props.side}
-        collapsed={collapsed()}
-        setCollapsed={setCollapsed}
+        collapsed={props.collapsed}
+        setCollapsed={props.setCollapsed}
         firstLabel={props.firstLabel}
         secondLabel={props.secondLabel}
         onPointerDown={startResize}

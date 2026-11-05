@@ -3,6 +3,7 @@ import { createStore, reconcile } from 'solid-js/store';
 import { AnyNode, ScalarNode, TextNode } from './Node';
 import { NameGenerator } from './NameGenerator';
 import { num, scalar } from '../jax';
+import type { Collapsed, SplitSide } from '~/components/SplitPane';
 
 /** Below this many pixels per unit, the grid hides its lines and keeps only the axes. */
 export const MIN_GRID_UNIT = 20;
@@ -20,6 +21,13 @@ export class NodeStore {
   public canvasBounds: Accessor<{ width: number; height: number }>;
   public setCanvasBounds: (bounds: { width: number; height: number }) => void;
 
+  /** The side of the page the canvas sits on. */
+  public canvasSide: Accessor<SplitSide>;
+  public setCanvasSide: (side: SplitSide) => void;
+  /** The page's collapsed pane: `first` is the canvas, `second` the text. */
+  public collapsedPane: Accessor<Collapsed>;
+  public setCollapsedPane: (c: Collapsed) => void;
+
   /** Pixels per grid unit, read from the `unit` node. */
   public unit!: Accessor<number>;
   /** Opacity multiplier for the grid lines and axes, read from the `gridOpacity` node. */
@@ -31,7 +39,7 @@ export class NodeStore {
 
   public nameGenerator: NameGenerator;
 
-  constructor() {
+  constructor(canvasSide: SplitSide, collapsedPane: Collapsed) {
     const [nodesState, setNodesState] = createStore<Record<string, NodeSignal>>({});
     this.nodes = nodesState;
     this.setNodes = (id, value) => { setNodesState(id, value as any); };
@@ -40,6 +48,9 @@ export class NodeStore {
     const [canvasBounds, setCanvasBounds] = createSignal({ width: 500, height: 500 });
     this.canvasBounds = canvasBounds;
     this.setCanvasBounds = setCanvasBounds;
+
+    [this.canvasSide, this.setCanvasSide] = createSignal(canvasSide);
+    [this.collapsedPane, this.setCollapsedPane] = createSignal(collapsedPane);
 
     createRoot(() => {
       this.unit = createMemo(() => {

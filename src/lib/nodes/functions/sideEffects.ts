@@ -4,6 +4,7 @@ import { AnyNode, PointNode, ScalarNode, TextNode, checkColor, getNodeTypes } fr
 import { NodeStore } from '../state/NodeStore';
 import { Dtype, add, num, ref, scalar } from '../jax';
 import type { Track } from '../animation';
+import type { SplitSide } from '~/components/SplitPane';
 
 /**
  * Saves `node` with `changes`, new values for some of its numbers, in place of `node`.
@@ -111,6 +112,39 @@ export const Clear: SideEffectFunc = {
   parameters: [],
   run(_inputs, store) {
     store.clearNodes();
+  },
+};
+
+const CANVAS_SIDES: SplitSide[] = ['left', 'right', 'top', 'bottom'];
+
+/**
+ * Show the canvas, and move it to `side` when given.
+ * @param side - 'left', 'right', 'top' or 'bottom' (default: where it is now)
+ */
+export const ShowCanvas: SideEffectFunc = {
+  keyword: 'show_canvas',
+  parameters: [{ name: 'side', type: 'Text', defaultValue: null }],
+  broadcastable: false,
+  run(inputs, store) {
+    const side = (inputs[0] as TextNode | undefined)?.value;
+    if (side !== undefined) {
+      if (!CANVAS_SIDES.includes(side as SplitSide)) {
+        throw new Error(`show_canvas: side must be one of ${CANVAS_SIDES.join(', ')}, got '${side}'`);
+      }
+      store.setCanvasSide(side as SplitSide);
+    }
+    if (store.collapsedPane() === 'first') store.setCollapsedPane('none');
+  },
+};
+
+/**
+ * Hide the canvas. Its nodes stay.
+ */
+export const HideCanvas: SideEffectFunc = {
+  keyword: 'hide_canvas',
+  parameters: [],
+  run(_inputs, store) {
+    store.setCollapsedPane('first');
   },
 };
 

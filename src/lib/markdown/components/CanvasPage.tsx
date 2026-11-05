@@ -5,14 +5,19 @@ import { UiLayer } from '~/lib/ui/UiLayer';
 import type { CanvasSide } from '../frontmatter';
 import { MarkdownBody } from './MarkdownBody';
 
-/** A canvas on `side` of the page's text. `python-editor` blocks in the text draw on it. */
-export function CanvasPage(props: { side: Exclude<CanvasSide, 'none'>; html: string }) {
-  const store = new NodeStore();
+/**
+ * A canvas on `side` of the page's text. `python-editor` blocks in the text draw on it.
+ * `none`: the canvas starts collapsed, on the right.
+ */
+export function CanvasPage(props: { side: CanvasSide; html: string }) {
+  const store = props.side === 'none' ? new NodeStore('right', 'first') : new NodeStore(props.side, 'none');
 
   return (
     <SplitPane
       class="canvas-page"
-      side={props.side}
+      side={store.canvasSide()}
+      collapsed={store.collapsedPane()}
+      setCollapsed={store.setCollapsedPane}
       first={
         <div class="canvas-page-canvas">
           <NodeCanvas store={store} />
