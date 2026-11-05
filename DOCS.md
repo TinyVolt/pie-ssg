@@ -1,7 +1,9 @@
 In addition to a general markdown based SSG, `pie` provides some additional features as laid out in the [roadmap](ROADMAP.md). Here is how to use those features:
 
 ## A canvas for visualization
-Use the frontmatter `canvas` prop to add a canvas to the page. Accepted values are `left`, `right`, `top`, `bottom` and `none` (default).
+Every page has a canvas. Use the frontmatter `canvas` prop to set its side: `left`, `right`, `top`, `bottom` or `none` (default). With `none`, the canvas starts collapsed on the right. 
+
+Use `pie.show_canvas()` and `pie.hide_canvas()` to show or hide the canvas from Python. `pie.show_canvas(side)` also moves it to `side`, one of `left`, `right`, `top` or `bottom`. 
 
 Each element on the canvas is a `Node`. Each `Node` has an `id`. 
 
