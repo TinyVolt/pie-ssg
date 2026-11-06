@@ -58,6 +58,23 @@ Updating doesn't change the site's `AGENTS.md` or `vite.config.ts`. To get the n
 
 Requires Node 24. Package: [@tinyvolt/pie](https://www.npmjs.com/package/@tinyvolt/pie).
 
+## Use pie inside another app
+
+A Solid app built with Vite can show pie pages too, e.g. as a Markdown preview:
+
+```tsx
+import { compilePie, PiePage } from '@tinyvolt/pie/runtime';
+import '@tinyvolt/pie/runtime.css';
+
+<PiePage page={compilePie(markdown)} />
+```
+
+- `compilePie(markdown, { site, readFile })` turns pie markdown into a page, as a site build would. It throws with the build's error messages.
+- `<PiePage page modules css />` shows it, in a box that fills its parent. `modules` holds the app's own functions, node types and UIs; `css` is CSS limited to the page.
+- The app's own functions, node types and UIs import from `@tinyvolt/pie/runtime` instead of `~/lib/...`.
+
+The full guide, for developers and AI agents, is [runtime-agents.md](runtime-agents.md), also at `node_modules/@tinyvolt/pie/runtime-agents.md`.
+
 ## Developing pie-ssg
 
 Requires Node 24 (see `.nvmrc`) and pnpm.
@@ -79,7 +96,7 @@ pnpm preview   # preview the build with vite
 
 ## Publishing
 
-Bump `version` in `package.json`, then at the repo root:
+Bump `version` in `package.json`, then at the repo root (packing runs `pnpm build:runtime` first, which writes `dist/`):
 
 ```sh
 npm whoami

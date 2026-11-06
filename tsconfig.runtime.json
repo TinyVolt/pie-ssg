@@ -1,0 +1,13 @@
+{
+  // `scripts/build-runtime.js` builds `dist/` with this: `src/runtime.tsx`, what it imports, and the Python worker.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist",
+    // No `node`: the runtime runs in the browser.
+    "types": ["vite/client"]
+  },
+  "files": ["src/runtime.tsx", "src/lib/python/worker.ts"]
+}

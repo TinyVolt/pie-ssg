@@ -3,8 +3,8 @@ import { runnerImport, type Plugin } from 'vite';
 import { APP_DIR } from '../../appDir';
 
 /**
- * Loads `registry.ts` and `state/Node.ts` once at build start, so a bad `functions/**\/*.ts`
- * (e.g. a keyword used twice) or `nodes/**\/*.{ts,tsx}` (e.g. a type used twice) fails the build.
+ * Loads `siteModules.ts` once at build start, so a bad `functions/**\/*.ts` (e.g. a keyword used twice),
+ * `nodes/**\/*.{ts,tsx}` (e.g. a type used twice) or `ui/**\/*.{ts,tsx}` (e.g. a name used twice) fails the build.
  * Without this, the error only stops pages from prerendering.
  */
 export function checkFunctions(): Plugin {
@@ -22,16 +22,14 @@ export function checkFunctions(): Plugin {
       if (checked) return;
       checked = true;
       try {
-        const options = {
-          configFile: false as const,
+        await runnerImport(path.join(APP_DIR, 'lib/siteModules.ts'), {
+          configFile: false,
           root,
-          logLevel: 'silent' as const,
+          logLevel: 'silent',
           resolve: { alias: { '~': APP_DIR } },
-          // Render functions use JSX. They never run here, so any JSX runtime that loads will do.
-          oxc: { jsx: { runtime: 'automatic' as const, importSource: 'solid-js/h' } },
-        };
-        await runnerImport(path.join(APP_DIR, 'lib/nodes/functions/registry.ts'), options);
-        await runnerImport(path.join(APP_DIR, 'lib/nodes/state/Node.ts'), options);
+          // Render functions and UIs use JSX. They never run here, so any JSX runtime that loads will do.
+          oxc: { jsx: { runtime: 'automatic', importSource: 'solid-js/h' } },
+        });
       } catch (e) {
         this.error((e as Error).message);
       }

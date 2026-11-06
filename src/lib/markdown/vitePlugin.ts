@@ -1,11 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import type { Plugin } from 'vite';
-import { buildFeatures, FEATURE_FIELDS } from './features/build';
+import { compilePage } from './compile';
+import { FEATURE_FIELDS } from './features/build';
 import type { PageTags } from './features/tags/pages';
 import { parseFrontmatter } from './frontmatter';
-import type { Page } from './pages';
-import { renderMarkdown } from './render';
 import { APP_DIR } from '../appDir';
 import { parseSite } from '../site/vitePlugin';
 
@@ -28,10 +27,8 @@ export function markdownPages(): Plugin {
       const [filePath, query] = id.split('?');
       const file = path.relative(root, filePath);
       if (!file.startsWith(`pages${path.sep}`) || !file.endsWith('.md')) return;
-      const { frontmatter, raw, body } = parseFrontmatter(file, markdown);
-
       if (new URLSearchParams(query).has('tags')) {
-        const { title, description } = frontmatter;
+        const { frontmatter: { title, description }, raw } = parseFrontmatter(file, markdown);
         const page: PageTags = { title, description, tags: FEATURE_FIELDS.tags.parse(raw.tags ?? '') };
         return { code: `export default ${JSON.stringify(page)};`, map: null };
       }
@@ -53,8 +50,7 @@ export function markdownPages(): Plugin {
         return parseFrontmatter(shown, fs.readFileSync(target, 'utf8')).body;
       };
 
-      const { data, extensions } = buildFeatures(file, raw, site, readFile);
-      const page: Page = { frontmatter, html: renderMarkdown(body, extensions), features: data };
+      const page = compilePage(file, markdown, site, readFile, true);
       return { code: `export default ${JSON.stringify(page)};`, map: null };
     },
   };

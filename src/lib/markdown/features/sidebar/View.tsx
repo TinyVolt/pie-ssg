@@ -14,9 +14,11 @@ const DRAWER_BELOW = '768px';
 export function SidebarView(props: { data: string; children: JSX.Element }) {
   const [open, setOpen] = createSignal(false);
   const [drawer, setDrawer] = createSignal(false);
+  let page!: HTMLDivElement;
 
   onMount(() => {
-    const below = getComputedStyle(document.documentElement).getPropertyValue('--sidebar-drawer-below').trim() || DRAWER_BELOW;
+    // Read here, not on `:root`, so a host can set it on its `.pie-page`.
+    const below = getComputedStyle(page).getPropertyValue('--sidebar-drawer-below').trim() || DRAWER_BELOW;
     const query = matchMedia(`(width < ${below})`);
     const update = () => setDrawer(query.matches);
     update();
@@ -31,7 +33,7 @@ export function SidebarView(props: { data: string; children: JSX.Element }) {
   const label = () => (open() ? 'Hide sidebar' : 'Show sidebar');
 
   return (
-    <div class="sidebar-page" classList={{ 'sidebar-page--open': open(), 'sidebar-page--drawer': drawer() }}>
+    <div ref={page} class="sidebar-page" classList={{ 'sidebar-page--open': open(), 'sidebar-page--drawer': drawer() }}>
       <aside id="sidebar" class="sidebar" onClick={closeOnLink}>
         <MarkdownBody class="sidebar-text" html={props.data} />
       </aside>

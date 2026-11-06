@@ -12,7 +12,7 @@
  * A feature that only changes the page's HTML, like `toc`, has no view.
  */
 import type { MarkedExtension } from 'marked';
-import type { Field } from '../frontmatter';
+import type { Field, Values } from '../frontmatter';
 import { glossary } from './glossary/build';
 import { sidebar } from './sidebar/build';
 import { tags } from './tags/build';
@@ -26,6 +26,8 @@ export interface BuildContext {
   from: string;
   /** The markdown of the `.md` file at `path`, relative to the folder of `from`, without its frontmatter. Throws if it's missing or outside the project. */
   readFile(path: string): string;
+  /** False inside another app (`compilePie`), which has no tag pages to link to. */
+  tagLinks: boolean;
 }
 
 /** A feature's build half. `T`: its frontmatter value. `D`: the data its view gets. */
@@ -53,20 +55,27 @@ export const FEATURE_FIELDS = Object.fromEntries(
   Object.entries(FEATURES).map(([key, feature]) => [key, feature.field]),
 ) as { [K in keyof typeof FEATURES]: (typeof FEATURES)[K]['field'] };
 
-/** Runs every feature's `build` for the page `file`. Throws, naming the file and key, on a bad value. */
+/** Each feature's value, as `site.yml` gives it. */
+export type FeatureValues = Values<typeof FEATURE_FIELDS>;
+
+/**
+ * Runs every feature's `build` for the page `file`. Throws, naming the file and key, on a bad value.
+ * A key that neither the page nor `site` sets takes its field's default.
+ */
 export function buildFeatures(
   file: string,
   raw: Record<string, string>,
-  site: Record<string, unknown>,
+  site: Partial<FeatureValues>,
   readFile: (from: string, path: string) => string,
+  tagLinks: boolean,
 ): { data: FeatureData; extensions: MarkedExtension[] } {
   const data: Record<string, unknown> = {};
   const extensions: MarkedExtension[] = [];
-  for (const [key, feature] of Object.entries(FEATURES) as [string, FeatureBuild<unknown, unknown>][]) {
+  for (const [key, feature] of Object.entries(FEATURES) as [keyof FeatureValues, FeatureBuild<unknown, unknown>][]) {
     const from = Object.hasOwn(raw, key) ? file : 'site.yml';
     try {
-      const value = from === file ? feature.field.parse(raw[key]) : site[key];
-      const ctx: BuildContext = { file, from, readFile: path => readFile(from, path) };
+      const value = from === file ? feature.field.parse(raw[key]) : site[key] ?? feature.field.default;
+      const ctx: BuildContext = { file, from, readFile: path => readFile(from, path), tagLinks };
       const built = feature.build(value, ctx);
       if (built === undefined) continue;
       data[key] = built;

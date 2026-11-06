@@ -61,6 +61,8 @@ export function dragUi(e: PointerEvent, box: HTMLElement, text: HTMLElement) {
   let frame = 0;
   const line = document.createElement('div');
   line.className = 'python-editor-ui-drop-line';
+  // Holds the box and the line while dragging. Inside the page, so styles limited to it apply; `fixed` keeps them unclipped.
+  const floating = text.parentElement!;
 
   const overLayer = () => layer !== null && inside(layer.getBoundingClientRect(), pointer);
 
@@ -72,7 +74,7 @@ export function dragUi(e: PointerEvent, box: HTMLElement, text: HTMLElement) {
     line.style.left = `${textRect.left}px`;
     line.style.width = `${textRect.width}px`;
     line.style.top = `${nearestGap(text, box, pointer.y).y}px`;
-    if (!line.isConnected) document.body.append(line);
+    if (!line.isConnected) floating.append(line);
   };
 
   const autoScroll = () => {
@@ -93,7 +95,7 @@ export function dragUi(e: PointerEvent, box: HTMLElement, text: HTMLElement) {
     document.body.style.userSelect = 'none';
     box.classList.add('python-editor-ui-dragging');
     box.style.position = 'fixed';
-    document.body.append(box);
+    floating.append(box);
     frame = requestAnimationFrame(autoScroll);
   };
 
