@@ -1,12 +1,4 @@
-import type { FeatureData } from './features/build';
-import type { Frontmatter } from './frontmatter';
-
-/** One `pages/**\/*.md`, as `vitePlugin.ts` turns it into a module at build time. */
-export interface Page {
-  frontmatter: Frontmatter;
-  html: string;
-  features: FeatureData;
-}
+import type { Page } from './compile';
 
 // Not eager: each page is its own file, downloaded only when that page is opened.
 // A file whose name starts with `_` is not a page; it can still be used by a feature, e.g. as a sidebar.

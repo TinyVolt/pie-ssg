@@ -58,7 +58,7 @@ for (const [from, to] of Object.entries(FILES)) {
 // Claude Code reads `CLAUDE.md`; `@AGENTS.md` loads the guide from there.
 fs.writeFileSync(path.join(target, 'CLAUDE.md'), '@AGENTS.md\n');
 
-// The site depends on this exact version, plus its peers at the exact versions it was tested with.
+// The site depends on this exact version, plus its peers at the exact versions it was tested with (its dev dependencies).
 // pnpm only lets a site see its own dependencies, so `vite` (the CLI, the config) and `solid-js` (JSX in `nodes/`) are listed here.
 // `--configLoader runner` lets Vite load `@tinyvolt/pie/vite`: Node won't strip TypeScript types under `node_modules`.
 const app = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
@@ -72,7 +72,7 @@ const pkg = {
     start: app.scripts.start,
     preview: vite('preview'),
   },
-  dependencies: { [app.name]: app.version, ...app.peerDependencies },
+  dependencies: { [app.name]: app.version, 'solid-js': app.devDependencies['solid-js'], vite: app.devDependencies.vite },
   devDependencies: { '@types/node': app.devDependencies['@types/node'], typescript: app.devDependencies.typescript },
   engines: app.engines,
 };

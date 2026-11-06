@@ -7,6 +7,7 @@ import { PageTitle } from '~/components/PageTitle';
 import { CanvasPage } from '~/lib/markdown/components/CanvasPage';
 import { wrapPage } from '~/lib/markdown/features/views';
 import { loadPage } from '~/lib/markdown/pages';
+import '~/lib/siteModules';
 
 export default function Page() {
   const params = useParams();

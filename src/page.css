@@ -1,0 +1,664 @@
+/*
+ * A page's styles: its text, canvas, features and editors. A site loads them through `app.css`.
+ * `@tinyvolt/pie/runtime.css` holds them too, each limited to `.pie-page`, so they don't style the rest of the host app.
+ */
+
+/* Page text: a centered column about 70 characters wide. */
+main {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--content-width, 40rem);
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  font-family: var(--font-body, Georgia, "Times New Roman", serif);
+  font-size: var(--font-size-body, 1.125rem);
+}
+
+main h1,
+main h2,
+main h3,
+main h4 {
+  line-height: 1.25;
+}
+
+main h1 {
+  font-size: 2rem;
+  margin: 0 0 1rem;
+}
+
+main h2 {
+  font-size: 1.4rem;
+  margin: 2rem 0 0.75rem;
+}
+
+main h3 {
+  font-size: 1.15rem;
+  margin: 1.5rem 0 0.5rem;
+}
+
+main p,
+main ul,
+main ol,
+main blockquote,
+main table {
+  margin: 0 0 1rem;
+}
+
+main li + li {
+  margin-top: 0.25rem;
+}
+
+main hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--color-border, #ddd);
+}
+
+main blockquote {
+  padding-left: 1rem;
+  border-left: 3px solid var(--color-border, #ddd);
+  color: var(--color-muted, #555);
+}
+
+main img {
+  max-width: 100%;
+}
+
+main code {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  background: var(--color-code-bg, #f4f4f4);
+  border-radius: 3px;
+}
+
+main > pre {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  background: var(--color-code-bg, #f4f4f4);
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+main pre code {
+  padding: 0;
+  background: none;
+}
+
+/* ```python tokens. Same colors as the editor's default theme. */
+.tok-keyword { color: #708; }
+.tok-atom, .tok-bool { color: #219; }
+.tok-literal, .tok-number { color: #164; }
+.tok-string { color: #a11; }
+.tok-string2 { color: #e40; }
+.tok-variableName.tok-definition { color: #00f; }
+.tok-variableName.tok-local { color: #30a; }
+.tok-typeName, .tok-namespace { color: #085; }
+.tok-className { color: #167; }
+.tok-variableName2, .tok-macroName { color: #256; }
+.tok-propertyName.tok-definition { color: #00c; }
+.tok-comment { color: #940; }
+.tok-meta { color: #404740; }
+.tok-invalid { color: #f00; }
+
+main table {
+  border-collapse: collapse;
+}
+
+main th,
+main td {
+  padding: 0.3rem 0.75rem;
+  border-bottom: 1px solid var(--color-border, #ddd);
+  text-align: left;
+}
+
+main .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.split-pane {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.split-pane--left {
+  flex-direction: row;
+}
+
+.split-pane--right {
+  flex-direction: row-reverse;
+}
+
+.split-pane--top {
+  flex-direction: column;
+}
+
+.split-pane--bottom {
+  flex-direction: column-reverse;
+}
+
+/* Each pane scrolls on its own. */
+.split-pane-pane {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+
+/* Draggable divider: a thin bar along whichever axis the split uses. */
+.split-pane-divider {
+  position: relative;
+  flex: 0 0 6px;
+  align-self: stretch;
+  background: var(--color-border, #ddd);
+  cursor: col-resize;
+  z-index: 5;
+  transition: background 0.15s ease;
+  touch-action: none;
+}
+
+.split-pane-divider:hover,
+.split-pane-divider:active {
+  background: var(--color-border-hover, #999);
+}
+
+.split-pane-divider--horizontal {
+  cursor: row-resize;
+}
+
+.split-pane-buttons {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.split-pane-divider--horizontal .split-pane-buttons {
+  flex-direction: row;
+}
+
+.split-pane-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 50%;
+  color: var(--color-subtle, #666);
+  cursor: pointer;
+}
+
+.split-pane-button:hover {
+  color: var(--color-hover, #000);
+  border-color: var(--color-border-hover, #999);
+}
+
+.canvas-page {
+  flex: 1 1 0;
+}
+
+.canvas-page-canvas {
+  position: relative;
+  height: 100%;
+}
+
+/* NodeCanvas measures this box to size its grid. */
+.node-canvas {
+  width: 100%;
+  height: 100%;
+  /* Drags and pinches move the canvas, not the page. */
+  touch-action: none;
+}
+
+.canvas-page-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* A page with a sidebar: the sidebar, a line with its button, then the page. */
+.sidebar-page {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Collapsed: hidden with CSS so its editors keep their code. Open: stays in view while the page scrolls. */
+.sidebar {
+  display: none;
+  flex: 0 0 var(--sidebar-width, 16rem);
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100dvh;
+  overflow-y: auto;
+}
+
+.sidebar-page--open .sidebar {
+  display: block;
+}
+
+/* A canvas page doesn't scroll, so the sidebar fills its height and scrolls on its own. */
+.sidebar-page:has(.canvas-page) > .sidebar {
+  align-self: stretch;
+  max-height: none;
+}
+
+.sidebar-text {
+  padding: 1rem 1.25rem 2rem;
+}
+
+.sidebar-edge {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 1px;
+  background: var(--color-border, #ddd);
+}
+
+.sidebar-toggle {
+  position: sticky;
+  top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.75rem;
+  padding: 0;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 50%;
+  color: var(--color-subtle, #666);
+  cursor: pointer;
+}
+
+.sidebar-toggle:hover {
+  color: var(--color-hover, #000);
+  border-color: var(--color-border-hover, #999);
+}
+
+/* Fills the rest; a canvas page inside fills its height. */
+.sidebar-page-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* Narrow screens: the open sidebar covers the page, over a dimmed backdrop. */
+.sidebar-page--drawer .sidebar {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 20;
+  width: min(var(--sidebar-width, 16rem), 85vw);
+  max-height: none;
+  background: var(--color-bg, #fff);
+  box-shadow: 0 0 1rem rgb(0 0 0 / 0.2);
+}
+
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: var(--color-backdrop, rgb(0 0 0 / 0.3));
+}
+
+/* `toc: true`: the table of contents, a box at the start of the page's text. */
+.toc {
+  margin: 0 0 1.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  font-size: 0.95em;
+}
+
+.toc ul {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.toc a {
+  text-decoration: none;
+}
+
+.toc a:hover {
+  color: var(--color-hover, #000);
+  text-decoration: underline;
+}
+
+/* `tags: #math`: the page's tags, at the end of its text. */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 2rem 0 1rem;
+  font-size: 0.95em;
+}
+
+.tags a {
+  text-decoration: none;
+}
+
+.tags a:hover {
+  color: var(--color-hover, #000);
+  text-decoration: underline;
+}
+
+/* `glossary: _terms.md`: a term in the text. */
+.term {
+  text-decoration: underline dotted;
+  text-underline-offset: 0.15em;
+  cursor: pointer;
+}
+
+/* GlossaryView sets its top or bottom, and `--term-left`. It stays on screen, at most 22rem wide. */
+.term-popup {
+  --term-popup-width: min(22rem, 100vw - 2rem);
+  display: none;
+  position: fixed;
+  z-index: 30;
+  left: clamp(1rem, var(--term-left), 100vw - 1rem - var(--term-popup-width));
+  box-sizing: border-box;
+  width: var(--term-popup-width);
+  padding: 0.5rem 0.75rem;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  font-style: normal;
+  font-weight: normal;
+  cursor: auto;
+}
+
+@media (hover: hover) {
+  .term:hover > .term-popup {
+    display: block;
+  }
+}
+
+.term--open > .term-popup {
+  display: block;
+}
+
+/* The first 4 lines of the definition, then "…". */
+.term-popup-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  overflow: hidden;
+}
+
+.term-popup-text > * {
+  margin: 0;
+}
+
+.term-more {
+  color: var(--color-muted, #555);
+}
+
+/* The page's glossary, at its end, collapsed. */
+.glossary {
+  margin: 2rem 0 0;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border, #ddd);
+}
+
+.glossary summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.glossary dt {
+  margin-top: 1rem;
+  font-weight: 600;
+}
+
+.glossary dd {
+  margin: 0.25rem 0 0;
+}
+
+/* Hidden until MarkdownBody swaps it for the editor; keeps its space so the text below doesn't jump. */
+pre:has(> code.language-python-editor) {
+  visibility: hidden;
+  max-height: 20rem;
+  overflow: hidden;
+}
+
+.python-editor {
+  margin: 1rem 0;
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+}
+
+/* Default cap on the code's height. Dragging the resize bar replaces it with a fixed height. */
+.python-editor .cm-editor {
+  font-size: 0.875rem;
+  max-height: 20rem;
+}
+
+.python-editor .cm-scroller {
+  overflow-y: auto;
+}
+
+.python-editor-resize {
+  height: 6px;
+  cursor: row-resize;
+  touch-action: none;
+}
+
+.python-editor-resize:hover {
+  background: var(--color-border, #ddd);
+}
+
+.python-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border-top: 1px solid var(--color-border, #ddd);
+}
+
+.python-editor-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.python-editor-button:hover {
+  border-color: var(--color-border-hover, #999);
+}
+
+.python-editor-status {
+  color: var(--color-subtle, #666);
+  font-size: 0.875rem;
+}
+
+.python-editor-result {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.python-editor-result-success {
+  color: var(--color-success, #1a7f37);
+}
+
+.python-editor-result-error {
+  color: var(--color-error, #c00);
+}
+
+.python-editor-result-stopped {
+  color: var(--color-warning, #9a6700);
+}
+
+.python-editor-collapse {
+  margin-left: auto;
+}
+
+/* Collapsed: only the toolbar shows. Hidden with CSS so the editor keeps its code. */
+.python-editor-collapsed .python-editor-code,
+.python-editor-collapsed .python-editor-resize,
+.python-editor-collapsed .python-editor-output {
+  display: none;
+}
+
+.python-editor-collapsed .python-editor-toolbar {
+  border-top: none;
+}
+
+/* Right padding leaves room for the copy button so it doesn't cover the text. */
+.python-editor-output {
+  position: relative;
+  padding: 0.5rem 2.75rem 0.5rem 0.5rem;
+  border-top: 1px solid var(--color-border, #ddd);
+  font-size: 0.875rem;
+}
+
+.python-editor-copy {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+}
+
+.python-editor-text {
+  margin: 0;
+  max-height: 20rem;
+  overflow: auto;
+  white-space: pre-wrap;
+}
+
+.python-editor-plot {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+.python-editor-error {
+  color: var(--color-error, #c00);
+}
+
+/* Outside the editor's box, so collapsing the editor keeps them. */
+.python-editor-uis {
+  margin: 1rem 0;
+}
+
+/* Hidden when its UIs were all dragged away. */
+.python-editor-uis:not(:has(.python-editor-ui)) {
+  display: none;
+}
+
+/* A UI: a grip to drag it, then the UI. */
+.python-editor-ui {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.25rem 0;
+}
+
+/* Dropped into the page's text. */
+main > .python-editor-ui {
+  margin: 1rem 0;
+}
+
+/* One of its nodes is removed. */
+.python-editor-ui-hidden {
+  display: none;
+}
+
+.python-editor-ui-grip {
+  padding: 0 0.125rem;
+  color: var(--color-subtle, #666);
+  line-height: 1;
+  cursor: grab;
+  user-select: none;
+  /* A touch drag moves the UI, not the page. */
+  touch-action: none;
+  opacity: 0;
+}
+
+.python-editor-ui:hover > .python-editor-ui-grip,
+.python-editor-ui-dragging > .python-editor-ui-grip {
+  opacity: 1;
+}
+
+.python-editor-ui-label {
+  white-space: nowrap;
+}
+
+/* Touchscreens have no hover. */
+@media (hover: none) {
+  .python-editor-ui-grip {
+    opacity: 1;
+  }
+}
+
+/* Floating over the page while dragged, or on the canvas: a box, so it reads over anything under it. */
+.python-editor-ui-dragging,
+.canvas-ui-layer > .python-editor-ui {
+  margin: 0;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+}
+
+.python-editor-ui-dragging {
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: grabbing;
+}
+
+/* Where a dragged UI lands in the text. */
+.python-editor-ui-drop-line {
+  position: fixed;
+  z-index: 1000;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--color-hover, #000);
+  pointer-events: none;
+}
+
+/* Lets clicks through to the canvas, except on the UIs in it. */
+.canvas-ui-layer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.canvas-ui-layer > * {
+  pointer-events: auto;
+}
+
+.pie-ui-choices {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.python-editor-note {
+  color: var(--color-subtle, #666);
+}

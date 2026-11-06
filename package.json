@@ -1,6 +1,6 @@
 {
   "name": "@tinyvolt/pie",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A Markdown-based SSG for interactive science explainers. Create a site with: npx @tinyvolt/pie init my-site",
   "type": "module",
   "homepage": "https://pie.tinyvolt.com/",
@@ -9,7 +9,12 @@
     "url": "git+https://github.com/TinyVolt/pie-ssg.git"
   },
   "exports": {
-    "./vite": "./vite.ts"
+    "./vite": "./vite.ts",
+    "./runtime": {
+      "types": "./dist/runtime.d.ts",
+      "solid": "./dist/runtime.jsx"
+    },
+    "./runtime.css": "./dist/runtime.css"
   },
   "bin": {
     "pie": "init/index.js"
@@ -26,13 +31,17 @@
     "layouts",
     "public",
     "site.yml",
-    ".nvmrc"
+    ".nvmrc",
+    "dist",
+    "runtime-agents.md"
   ],
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "start": "node .output/server/index.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:runtime": "node scripts/build-runtime.js",
+    "prepack": "node scripts/build-runtime.js"
   },
   "dependencies": {
     "@codemirror/lang-python": "6.2.1",
@@ -48,8 +57,8 @@
     "nitro": "3.0.260610-beta"
   },
   "peerDependencies": {
-    "solid-js": "1.9.14",
-    "vite": "8.1.4"
+    "solid-js": "^1.9.14",
+    "vite": "^8.1.4"
   },
   "publishConfig": {
     "access": "public"

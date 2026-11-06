@@ -1,4 +1,5 @@
 import type { Accessor, JSXElement } from 'solid-js';
+import type { CustomModule } from '~/lib/customModules';
 import type { Dtype } from '../jax';
 import {
   renderPoint,
@@ -176,31 +177,38 @@ export type NodeType = keyof NodeTypeMap;
 const isNodeDefinition = (def: unknown): def is NodeDefinition =>
   typeof def === 'object' && def !== null && typeof (def as NodeDefinition).type === 'string';
 
-// The site's own node types: each `nodes/**/*.{ts,tsx}` exports `NodeDefinition`s, like `nodes/square.tsx`.
-const customModules = import.meta.glob<Record<string, unknown>>('/nodes/**/*.{ts,tsx}', { eager: true });
-
-// File path -> its definitions. Built-ins first.
-const definitionsByFile: [string, unknown[]][] = [
-  ['src/lib/nodes/state/Node.ts', [
+const BUILTINS: CustomModule[] = [{
+  file: 'src/lib/nodes/state/Node.ts',
+  exports: {
     TextDefinition, PointDefinition, ScalarDefinition, TriangleDefinition, LineDefinition, CircleDefinition,
     EllipseDefinition, BezierQuadraticDefinition, BezierCubicDefinition, ArcDefinition, PointGradDefinition,
     ArrayDefinition, DummyDefinition,
-  ]],
-  ...Object.entries(customModules).map(([path, mod]): [string, unknown[]] => [path.slice(1), Object.values(mod)]),
-];
+  },
+}];
 
-const nodeDefinitions = new Map<string, NodeDefinition>();
-const sourceFile = new Map<string, string>();
-for (const [file, defs] of definitionsByFile) {
-  for (const def of defs.filter(isNodeDefinition)) {
-    const other = sourceFile.get(def.type);
-    if (other !== undefined) {
-      throw new Error(`Duplicate node type '${def.type}': ${file} and ${other}`);
+let nodeDefinitions = new Map<string, NodeDefinition>();
+
+/**
+ * Replaces the custom node types with the `NodeDefinition`s that `modules` export, e.g. a site's `nodes/**\/*.{ts,tsx}`.
+ * Throws on a type used twice, leaving the types as they were.
+ */
+export function setCustomNodes(modules: CustomModule[]) {
+  const definitions = new Map<string, NodeDefinition>();
+  const sourceFile = new Map<string, string>();
+  for (const { file, exports } of [...BUILTINS, ...modules]) {
+    for (const def of Object.values(exports).filter(isNodeDefinition)) {
+      const other = sourceFile.get(def.type);
+      if (other !== undefined) {
+        throw new Error(`Duplicate node type '${def.type}': ${file} and ${other}`);
+      }
+      definitions.set(def.type, def);
+      sourceFile.set(def.type, file);
     }
-    nodeDefinitions.set(def.type, def);
-    sourceFile.set(def.type, file);
   }
+  nodeDefinitions = definitions;
 }
+
+setCustomNodes([]);
 
 export function getNodeDefinition(type: string): NodeDefinition | undefined {
   return nodeDefinitions.get(type);

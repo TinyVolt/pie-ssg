@@ -1,5 +1,5 @@
 import { createMemo, createRoot, createSignal, onCleanup } from 'solid-js';
-import { SideEffectFunc } from './Node2NodeFunc';
+import { ParameterDefinition, SideEffectFunc } from './Node2NodeFunc';
 import { AnyNode, PointNode, ScalarNode, TextNode, checkColor, getNodeTypes } from '../state/Node';
 import { NodeStore } from '../state/NodeStore';
 import { Dtype, add, num, ref, scalar } from '../jax';
@@ -35,8 +35,14 @@ export function replaceNode<N extends AnyNode>(store: NodeStore, node: N, change
   });
 }
 
-// Any node, but not a whole Array: an Array is looped over, so each item is hidden or shown.
-const anyItem = getNodeTypes().filter(type => type !== 'Array');
+// A parameter that takes any node, but not a whole Array: an Array is looped over, so each item is hidden or shown.
+// A getter, so it includes custom node types set after this file loads.
+const anyItem = (name: string): ParameterDefinition => ({
+  name,
+  get type() {
+    return getNodeTypes().filter(type => type !== 'Array');
+  },
+});
 
 /**
  * Hide a node: it is not drawn on the canvas.
@@ -44,7 +50,7 @@ const anyItem = getNodeTypes().filter(type => type !== 'Array');
  */
 export const Hide: SideEffectFunc = {
   keyword: 'hide',
-  parameters: [{ name: 'node', type: anyItem }],
+  parameters: [anyItem('node')],
   run(inputs, store) {
     store.updateNode(inputs[0].id, { hidden: true });
   },
@@ -56,7 +62,7 @@ export const Hide: SideEffectFunc = {
  */
 export const Show: SideEffectFunc = {
   keyword: 'show',
-  parameters: [{ name: 'node', type: anyItem }],
+  parameters: [anyItem('node')],
   run(inputs, store) {
     store.updateNode(inputs[0].id, { hidden: false });
   },
@@ -68,7 +74,7 @@ export const Show: SideEffectFunc = {
  */
 export const Remove: SideEffectFunc = {
   keyword: 'remove',
-  parameters: [{ name: 'node', type: anyItem }],
+  parameters: [anyItem('node')],
   run(inputs, store) {
     store.removeNode(inputs[0].id);
   },
@@ -81,7 +87,7 @@ export const Remove: SideEffectFunc = {
  */
 export const SetFill: SideEffectFunc = {
   keyword: 'set_fill',
-  parameters: [{ name: 'node', type: anyItem }, { name: 'color', type: 'Text' }],
+  parameters: [anyItem('node'), { name: 'color', type: 'Text' }],
   run(inputs, store) {
     const fill = (inputs[1] as TextNode).value;
     checkColor('set_fill', 'fill', fill);
@@ -96,7 +102,7 @@ export const SetFill: SideEffectFunc = {
  */
 export const SetStroke: SideEffectFunc = {
   keyword: 'set_stroke',
-  parameters: [{ name: 'node', type: anyItem }, { name: 'color', type: 'Text' }],
+  parameters: [anyItem('node'), { name: 'color', type: 'Text' }],
   run(inputs, store) {
     const stroke = (inputs[1] as TextNode).value;
     checkColor('set_stroke', 'stroke', stroke);

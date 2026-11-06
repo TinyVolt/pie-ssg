@@ -1,0 +1,29 @@
+/*
+ * The start of `@tinyvolt/pie/runtime.css`. The build adds `page.css` after it, inside `.pie-page { ... }`,
+ * so each of its rules is limited to the page and beats a host's rules for bare elements, like `main` or `*`.
+ */
+
+/* PiePage's box. It fills its parent, and the text and the canvas scroll inside it. In a site, `app.css` sets these on `body`. */
+.pie-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: var(--color-text, #1a1a1a);
+  background: var(--color-bg, #fff);
+  font-family: var(--font-ui, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+  line-height: var(--line-height, 1.6);
+}
+
+.pie-page a {
+  color: inherit;
+  text-underline-offset: 0.15em;
+}
+
+/* Browser defaults the page relies on, which a host's CSS reset may remove. */
+.pie-page main :is(ul, ol) {
+  padding-left: 40px;
+}
+
+.pie-page main :is(h4, h5, h6) {
+  margin: 1.33em 0;
+}

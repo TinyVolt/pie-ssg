@@ -330,7 +330,7 @@ export function Stepper(props: { args: UiArg[]; step?: number }) {
 - A UI that throws shows `pie.ui.<name>: <message>` in red in its place.
 - Don't add a grip or a label: every UI gets both. `args` and `label` are reserved prop names.
 - The built-in UIs are in `node_modules/@tinyvolt/pie/src/lib/ui/components/`.
-- A name used twice, by two of your files or by yours and a built-in, raises an error when a page with a Python editor loads. It doesn't fail the build.
+- A name used twice, by two of your files or by yours and a built-in, fails the build.
 
 ## Layouts: `layouts/`
 
@@ -365,6 +365,7 @@ Change the CSS variables in `styles/theme.css` (colors, fonts, text width), or a
 - a page's URL matches a route in `node_modules/@tinyvolt/pie/src/routes/`
 - a `functions/` keyword is used twice
 - a `nodes/` type name is used twice
+- a `ui/` name is used twice
 - a `layouts/` file has no default export
 
 Run `npm run build` after a change to confirm it.
