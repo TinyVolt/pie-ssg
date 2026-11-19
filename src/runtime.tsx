@@ -1,6 +1,7 @@
 // `@tinyvolt/pie/runtime`: shows pie pages inside another app. See `runtime-agents.md`.
 export { compilePie, type CompileOptions, type Page } from './lib/markdown/compile';
 export { PiePage } from './lib/markdown/components/PiePage';
+export { runPage, type RunPageOptions, type BlockResult } from './lib/python/runPage';
 export type { CustomModule, CustomModules } from './lib/customModules';
 
 // For the app's own functions, node types and UIs: what a site's files import from `~/lib/...`.

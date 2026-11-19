@@ -78,6 +78,28 @@ Shows a `Page` as a pie site shows it: the text, the canvas on the side `canvas:
 - It renders on the server too. Python, the canvas's drawing and the UIs need the browser, and `modules` is used only there.
 - Python runs in a web worker with Pyodide, loaded from `https://cdn.jsdelivr.net/pyodide/`. A host with a Content-Security-Policy must allow `cdn.jsdelivr.net` in `script-src` and `connect-src`, and `'wasm-unsafe-eval'` in `script-src`.
 
+## `runPage(page, options?)`
+
+Runs a `Page`'s `python-editor` blocks in order, as a reader clicking Run on each would, without showing the page. Use it to check a page's Python before showing it, e.g. a page an agent wrote. Added in 0.11.0.
+
+```ts
+import { compilePie, runPage } from '@tinyvolt/pie/runtime';
+
+const results = await runPage(compilePie(markdown));
+const failed = results.find(r => r.error !== undefined);
+```
+
+- It returns one `{ output, error? }` per block that ran: what the block printed, and its error, e.g. a Python traceback. `error` is unset for a block that ran without one.
+- It stops at the first block with an error, which is the last entry. Later blocks don't run and have no entry.
+- The blocks share Python variables, as on a page. `pie.*` calls work, on a canvas that isn't shown.
+- `pie.ui.*` calls are checked as on a page: an unknown UI or a missing node raises in Python. The UIs aren't drawn, so an error a UI shows in its own place, like `pie.ui.slider` given a Point, isn't caught. Figures from `plt.show()` are dropped.
+- Animated calls (`animate=True`) take half a second each, as on a page. In a tab that isn't visible, they wait until it is.
+- `options.timeoutMs`: stop after this many milliseconds in total, including loading Pyodide. Default 30000. The running block's error is then `Timed out after 30 s`, with the number of seconds given.
+- `options.modules`: as `<PiePage modules>`. While a `PiePage` is mounted, they must be the same files with the same exports as its `modules`, or `runPage` rejects with `runPage: modules differ from the open PiePage's`. A `PiePage` with other `modules`, mounted while `runPage` runs, throws `PiePage: modules differ from a running runPage's`. A name used twice rejects, as it makes `PiePage` throw.
+- It runs in its own Python worker, so a mounted `PiePage` keeps its variables and is not slowed down. Each call loads Pyodide again, which takes a few seconds. Packages a block imports, like numpy, load on first use in each call.
+- When it ends, its Python variables, nodes and worker are gone.
+- Browser only: it needs `Worker` and `DOMParser`.
+
 ## Your own functions, node types and UIs: `modules`
 
 A site keeps these in its `functions/`, `nodes/` and `ui/` folders. A host keeps them in its own files and passes them in:
