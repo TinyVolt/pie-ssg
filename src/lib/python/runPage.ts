@@ -1,7 +1,9 @@
+import { createComponent } from 'solid-js';
+import { render } from 'solid-js/web';
 import type { Page } from '~/lib/markdown/compile';
 import { holdCustomModules, type CustomModules } from '~/lib/customModules';
 import { NodeStore } from '~/lib/nodes/state/NodeStore';
-import { checkUi } from '~/lib/ui/UiView';
+import { checkUi, UiView, type UiCall } from '~/lib/ui/UiView';
 import { PythonRunner, PythonScope } from './runner';
 
 export interface RunPageOptions {
@@ -19,18 +21,38 @@ export interface BlockResult {
   error?: string;
 }
 
+/** The worker every `runPage` call uses. Kept between calls, so Pyodide loads once; a timeout kills it. */
+const runner = new PythonRunner();
+
+// The last call: each call waits for it, so a timeout kills only its own blocks.
+let previous: Promise<unknown> = Promise.resolve();
+
+/** Draws the UI out of sight, and throws the error it would show in its place. */
+function drawUi(store: NodeStore, call: UiCall) {
+  const box = document.createElement('div');
+  const dispose = render(() => createComponent(UiView, { store, call }), box);
+  const error = box.querySelector('.python-editor-error')?.textContent;
+  dispose();
+  if (error) throw new Error(error);
+}
+
 /**
  * Runs `page`'s `python-editor` blocks in order, as a reader clicking Run on each would, without showing them.
- * Stops at the first block with an error. Runs in its own Python worker, which it terminates at the end.
- * Rejects when a mounted PiePage has other `modules`.
+ * Stops at the first block with an error. Runs in a Python worker of its own, apart from the pages'.
+ * Calls run one at a time. Rejects when a mounted PiePage has other `modules`.
  */
-export async function runPage(page: Page, { timeoutMs = 30_000, modules = {} }: RunPageOptions = {}): Promise<BlockResult[]> {
+export function runPage(page: Page, options: RunPageOptions = {}): Promise<BlockResult[]> {
+  const result = previous.then(() => run(page, options));
+  previous = result.catch(() => {});
+  return result;
+}
+
+async function run(page: Page, { timeoutMs = 30_000, modules = {} }: RunPageOptions): Promise<BlockResult[]> {
   const doc = new DOMParser().parseFromString(page.html, 'text/html');
   // The blocks `MarkdownBody` turns into editors.
   const codes = Array.from(doc.querySelectorAll('pre > code.language-python-editor'), (el) => el.textContent ?? '');
 
   const release = holdCustomModules(modules, "runPage: modules differ from the open PiePage's");
-  const runner = new PythonRunner();
   const store = new NodeStore('right', 'none');
   const scope = new PythonScope(store, runner);
   const results: BlockResult[] = [];
@@ -61,15 +83,18 @@ export async function runPage(page: Page, { timeoutMs = 30_000, modules = {} }: 
             result.output += text;
           },
           () => {},
-          // Raises in Python as on a page; the UI isn't drawn.
-          (call) => checkUi(store, call),
+          // A thrown error raises in Python at the `pie.ui.*` call.
+          (call) => {
+            checkUi(store, call);
+            drawUi(store, call);
+          },
         );
       });
       if (result.error !== undefined) break;
     }
   } finally {
     clearTimeout(timer);
-    runner.kill();
+    // Frees the variables; the worker stays for the next call.
     scope.dispose();
     for (const id in store.nodes) store.nodes[id]?.dispose?.();
     release();
