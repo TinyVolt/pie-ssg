@@ -1,7 +1,7 @@
 import { createMemo, onCleanup, Show } from 'solid-js';
 import { isServer } from 'solid-js/web';
 import 'katex/dist/katex.min.css';
-import { setCustomModules, type CustomModules } from '~/lib/customModules';
+import { holdCustomModules, type CustomModules } from '~/lib/customModules';
 import type { Page } from '../compile';
 import { wrapPage } from '../features/views';
 import { CanvasPage } from './CanvasPage';
@@ -12,10 +12,11 @@ let mounted = false;
 /** Sets `modules` until the calling component is cleaned up. */
 function useModules(modules: CustomModules) {
   if (mounted) throw new Error('Only one PiePage can be mounted at a time');
-  setCustomModules(modules);
+  // A `runPage` running at the same time may hold the same modules.
+  const release = holdCustomModules(modules, "PiePage: modules differ from a running runPage's");
   mounted = true;
   onCleanup(() => {
-    setCustomModules({});
+    release();
     mounted = false;
   });
 }
@@ -24,7 +25,7 @@ function useModules(modules: CustomModules) {
  * A page from `compilePie`, shown as a pie site shows it, in a `.pie-page` box that fills its parent.
  * `modules`: the host's own functions, node types and UIs. `css`: author CSS, limited to the page.
  * A new `page`, `modules` or `css` starts a fresh canvas and fresh Python variables.
- * Throws on a name used twice in `modules`, or when another PiePage is mounted.
+ * Throws on a name used twice in `modules`, when another PiePage is mounted, or when a running `runPage` has other `modules`.
  */
 export function PiePage(props: { page: Page; modules?: CustomModules; css?: string }) {
   const current = createMemo(() => ({ page: props.page, modules: props.modules, css: props.css }));
