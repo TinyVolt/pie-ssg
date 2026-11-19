@@ -92,12 +92,13 @@ const failed = results.find(r => r.error !== undefined);
 - It returns one `{ output, error? }` per block that ran: what the block printed, and its error, e.g. a Python traceback. `error` is unset for a block that ran without one.
 - It stops at the first block with an error, which is the last entry. Later blocks don't run and have no entry.
 - The blocks share Python variables, as on a page. `pie.*` calls work, on a canvas that isn't shown.
-- `pie.ui.*` calls are checked as on a page: an unknown UI or a missing node raises in Python. The UIs aren't drawn, so an error a UI shows in its own place, like `pie.ui.slider` given a Point, isn't caught. Figures from `plt.show()` are dropped.
+- Each `pie.ui.*` call draws its UI out of sight. An unknown UI, a missing node, or an error the UI would show in its place, like `pie.ui.slider` given a Point, raises in Python at that call. Figures from `plt.show()` are dropped.
 - Animated calls (`animate=True`) take half a second each, as on a page. In a tab that isn't visible, they wait until it is.
 - `options.timeoutMs`: stop after this many milliseconds in total, including loading Pyodide. Default 30000. The running block's error is then `Timed out after 30 s`, with the number of seconds given.
+- Calls run one at a time: a call waits for the one before it to end, and its time limit starts then.
 - `options.modules`: as `<PiePage modules>`. While a `PiePage` is mounted, they must be the same files with the same exports as its `modules`, or `runPage` rejects with `runPage: modules differ from the open PiePage's`. A `PiePage` with other `modules`, mounted while `runPage` runs, throws `PiePage: modules differ from a running runPage's`. A name used twice rejects, as it makes `PiePage` throw.
-- It runs in its own Python worker, so a mounted `PiePage` keeps its variables and is not slowed down. Each call loads Pyodide again, which takes a few seconds. Packages a block imports, like numpy, load on first use in each call.
-- When it ends, its Python variables, nodes and worker are gone.
+- It runs in a Python worker of its own, so a mounted `PiePage` keeps its variables and is not slowed down. The worker stays between calls: Pyodide loads on the first call, and a package a block imports, like numpy, loads the first time a call imports it. Imported modules stay loaded too, as they do between a site's pages.
+- When a call ends, its Python variables and nodes are gone. A timeout also stops the worker, and the next call starts a new one, loading Pyodide again.
 - Browser only: it needs `Worker` and `DOMParser`.
 
 ## Your own functions, node types and UIs: `modules`
